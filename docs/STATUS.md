@@ -8,7 +8,7 @@ Last updated: 2026-11-04 · Current milestone: M5
 | M2 | done | milestone/M2 | Procedural BSP dungeon, turn resolution, FOV, Fog of War, RunScene |
 | M3 | done | milestone/M3 | Single run loop, gold collection, extraction, banking, Menu/Summary scenes |
 | M4 | done | milestone/M4 | Fear I: Oil, Dread, AudioDirector, PostFX, noise rings |
-| M5 | review | milestone/M5 | Fear II: Monsters FSM & Hallucinations |
+| M5 | done | milestone/M5 | Fear II: Monsters FSM & Hallucinations |
 | M6 | todo | milestone/M6 | Greed I: Loot curves, Curses, Bargains, Codex |
 | M7 | todo | milestone/M7 | Greed II: Shop, Meta upgrades, Balance sim |
 | M8 | todo | milestone/M8 | Mirror screen & Tutorial |
