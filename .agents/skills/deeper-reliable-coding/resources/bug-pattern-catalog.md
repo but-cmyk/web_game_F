@@ -26,3 +26,4 @@ Read this catalog when authoring new routines or inspecting edge cases.
 22. **Overwriting Saved State During Migration**: Bad: Blindly copying old fields over new schema defaults. Good: Apply explicit version migration step-by-step.
 23. **Non-Exhaustive Switch**: Bad: `switch(type) { case 'A': ... }`. Good: Include `default: assertNever(type);`.
 24. **Hardcoded Color in View**: Bad: `this.add.rectangle(x, y, w, h, 0xff0000)`. Good: Use palette index `PALETTE.danger`.
+

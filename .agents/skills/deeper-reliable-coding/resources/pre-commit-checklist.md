@@ -17,3 +17,4 @@ Read and verify these 15 items before committing changes:
 - [ ] 13. Player strings bound to i18n keys (`vi.json` and `en.json`).
 - [ ] 14. `npm run typecheck` and `npm run test` run and PASS.
 - [ ] 15. Diff reviewed using mechanical review scan.
+

@@ -19,3 +19,4 @@ Use this table and summary block when reporting code review findings:
 
 ## Verdict
 **VERDICT: CHANGES REQUESTED** (Blocker finding #1 must be resolved before sign-off).
+

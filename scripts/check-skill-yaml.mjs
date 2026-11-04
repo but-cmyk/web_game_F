@@ -22,3 +22,4 @@ for (const name of readdirSync(dir)) {
 }
 console.log(bad ? `\nFAILED: ${bad} problem(s)` : 'OK: all skill descriptions are YAML-safe');
 process.exit(bad ? 1 : 0);
+

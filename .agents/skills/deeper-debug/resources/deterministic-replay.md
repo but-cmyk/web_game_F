@@ -37,3 +37,4 @@ test('reproduces crawler getting stuck on corner', () => {
 When an error occurs during a long run:
 1. Binary-chop the action array to locate the earliest turn where state deviates from expected invariants.
 2. Remove extraneous intermediate movements that do not alter the failing interaction.
+

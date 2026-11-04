@@ -46,3 +46,4 @@ Single source of truth for UI spacing, text sizes, borders, layers, and color ro
 - `color-gold`: Radiant gold accent (#f4d06f)
 - `color-danger`: Warning crimson red (#d90429)
 - `color-focus`: Cyan highlight ring
+

@@ -14,3 +14,4 @@ Read this when executing visual reviews of screens or HUD changes.
 
 ## Review Artifacts
 Capture screenshots during browser smoke testing. Embed snapshots directly into the milestone walkthrough artifact. Do not commit raw image binaries to git unless explicitly requested.
+

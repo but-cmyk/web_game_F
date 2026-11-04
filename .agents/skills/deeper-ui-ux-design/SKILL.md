@@ -44,3 +44,4 @@ Consult [vietnamese-pixel-text.md](file:///c:/Users/PC/OneDrive/Desktop/web_game
 ## 6. Mobile Portrait Tension (360x640)
 - Canvas size 320x180 and integer scaling are `[LOCKED]`. On 360x640 mobile screens, 1x scale leaves vertical free space.
 - In Milestone M9, render virtual touch buttons as a responsive DOM overlay in the empty viewport space beneath the game canvas, satisfying the 44x44px touch target requirement.
+

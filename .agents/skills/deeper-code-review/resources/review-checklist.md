@@ -43,3 +43,4 @@ Read this resource during Phase 3 verification or while performing code reviews.
 - [ ] Are all user-facing strings referenced via `i18n` keys?
 - [ ] Do `vi.json` and `en.json` maintain 1:1 key parity?
 - [ ] Are TypeScript files kept under 300 lines?
+

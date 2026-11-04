@@ -40,3 +40,4 @@ Record findings using the format in [findings-template.md](file:///c:/Users/PC/O
 - **PASS WITH FOLLOW-UPS**: Minor improvements noted for subsequent milestones.
 - **CHANGES REQUESTED**: Any BLOCKER or MAJOR finding blocks milestone sign-off.
 - In self-review mode, address BLOCKER/MAJOR findings within the approved plan scope (up to 3 rounds). Rerun checks and copy the final verdict into the milestone walkthrough.
+

@@ -12,3 +12,4 @@ Use this concise template when reporting unresolved issues or escalation finding
 - **Proof / Regression Test**: `tests/regression_<cause>.test.ts`
 - **Escalation Reason**: <Need owner decision on feel / locked rule / 3 failed attempts>
 ```
+

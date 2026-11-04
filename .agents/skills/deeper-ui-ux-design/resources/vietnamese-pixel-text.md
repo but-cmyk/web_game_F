@@ -25,3 +25,4 @@ Render and visually verify these 12 strings on the 320x180 canvas:
 
 ## Typography Verification
 If a candidate bitmap font clips any accents (`ẩ`, `ễ`, `ặ`, `ố`, `ữ`), escalate immediately and test fallback alternatives. Record the approved font and its license in `CREDITS.md`.
+

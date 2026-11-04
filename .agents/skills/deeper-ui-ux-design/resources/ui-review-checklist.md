@@ -45,3 +45,4 @@ Read and evaluate against this checklist during visual screenshot reviews.
 - [ ] 28. Is the game playable within a 360x640 mobile portrait window?
 - [ ] 29. Are active UI particle effects capped at 30 instances?
 - [ ] 30. Does UI motion terminate in <= 200ms?
+

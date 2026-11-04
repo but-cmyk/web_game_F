@@ -21,3 +21,4 @@ Read this when troubleshooting engine lifecycle, bundler quirks, or asset servin
 ## 5. Hot Module Replacement (HMR) Quirks
 - Vite HMR may re-execute scene files without restarting the Phaser instance, creating duplicate keyboard and mouse listeners.
 - Always do a clean browser refresh (`Ctrl+F5`) to verify fixes.
+

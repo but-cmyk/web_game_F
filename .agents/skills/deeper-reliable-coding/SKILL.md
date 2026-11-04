@@ -57,3 +57,4 @@ Refer to [test-patterns.md](file:///c:/Users/PC/OneDrive/Desktop/web_game__F/.ag
 - Stop and report after 2 failed approaches instead of looping.
 - Run `/deeper-code-review` in self-review mode before declaring completion.
 - Consult [bug-pattern-catalog.md](file:///c:/Users/PC/OneDrive/Desktop/web_game__F/.agents/skills/deeper-reliable-coding/resources/bug-pattern-catalog.md) and [pre-commit-checklist.md](file:///c:/Users/PC/OneDrive/Desktop/web_game__F/.agents/skills/deeper-reliable-coding/resources/pre-commit-checklist.md) before every commit.
+

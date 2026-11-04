@@ -19,3 +19,4 @@ Read this when designing or modifying any screen in `src/scenes/` or `src/views/
 | **Settings** | Accessibility & preferences | "Save & Back" | Audio volume, reduce flashing, reduce shake, lang | M9 |
 | **Consent Screen** | Anonymous telemetry opt-in | "Accept" / "Decline" | Explanation, anonymous ID, delete data button | M10 |
 | **Break Reminder** | Encourage player well-being | "Dismiss" / "Take Break" | Time played counter, friendly break suggestion | M10 |
+

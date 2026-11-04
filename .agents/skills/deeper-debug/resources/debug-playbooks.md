@@ -16,3 +16,4 @@ Read this resource when diagnosing gameplay, rendering, or test failures.
 12. **Save Fails to Load After Version Bump**: Check migration functions in `SaveStore`; ensure default values fill newly introduced schema keys.
 13. **Wrong Gold or Oil Value**: Trace calculation to `lootValue(depth)` or `oilCostPerStep`; check for unrounded floating-point accumulation.
 14. **Monster Stuck in State**: Trace FSM transitions; check if LOS obstruction logic correctly toggles `CHASE` to `SEARCH`.
+

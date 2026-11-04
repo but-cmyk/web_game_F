@@ -166,3 +166,4 @@ else {
   console.log(`\n${e} error(s), ${findings.length - e} warning(s), ${new Set(findings.map((f) => f.file)).size} file(s) with findings`);
 }
 process.exit(findings.some((f) => f.level === 'ERROR') ? 1 : 0);
+

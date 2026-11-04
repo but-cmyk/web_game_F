@@ -51,3 +51,4 @@ test('Noise does not penetrate solid wall', () => {
 
 ## 5. Mutation Thinking
 Before finalizing any test, ask: *"If I alter the formula by +1 or invert the inequality sign in the implementation, will this test unequivocally fail?"* If no, make the assertion stricter.
+

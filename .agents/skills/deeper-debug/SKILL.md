@@ -44,3 +44,4 @@ Execute these steps strictly in order; never guess a patch without reproduction:
 ## 7. Playbooks & Pitfalls
 - Consult [debug-playbooks.md](file:///c:/Users/PC/OneDrive/Desktop/web_game__F/.agents/skills/deeper-debug/resources/debug-playbooks.md) for 14 common symptom-to-cause guides.
 - Consult [phaser-vite-pitfalls.md](file:///c:/Users/PC/OneDrive/Desktop/web_game__F/.agents/skills/deeper-debug/resources/phaser-vite-pitfalls.md) for rendering and lifecycle traps.
+
