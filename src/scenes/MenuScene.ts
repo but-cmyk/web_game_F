@@ -90,3 +90,4 @@ export class MenuScene extends Phaser.Scene {
     this.input.once('pointerdown', startRun);
   }
 }
+

@@ -126,3 +126,4 @@ export class SummaryScene extends Phaser.Scene {
     this.input.once('pointerdown', returnToMenu);
   }
 }
+
