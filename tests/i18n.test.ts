@@ -39,3 +39,4 @@ describe('i18n Localization', () => {
     expect(viKeys).toEqual(enKeys);
   });
 });
+

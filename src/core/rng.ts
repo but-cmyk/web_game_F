@@ -65,3 +65,4 @@ export class Rng {
     return new Rng(combinedSeed);
   }
 }
+

@@ -147,3 +147,4 @@ export class LocalStorageStore implements SaveStore {
     }
   }
 }
+

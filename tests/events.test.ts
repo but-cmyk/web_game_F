@@ -65,3 +65,4 @@ describe('Typed EventBus', () => {
     expect(fn2).not.toHaveBeenCalled();
   });
 });
+

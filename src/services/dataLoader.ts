@@ -174,3 +174,4 @@ export function loadMirrorArchetypes(): readonly ArchetypeDefinition[] {
 export function loadBannedWords(): readonly string[] {
   return bannedWordsJson.banned_words;
 }
+
