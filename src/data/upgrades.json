@@ -1,0 +1,52 @@
+{
+  "upgrades": [
+    {
+      "id": "lantern_capacity",
+      "name_key": "upgrade.lantern_capacity.name",
+      "desc_key": "upgrade.lantern_capacity.desc",
+      "max_tiers": 5,
+      "tier_costs": [50, 100, 200, 400, 800],
+      "effect_per_tier": 10
+    },
+    {
+      "id": "soft_shoes",
+      "name_key": "upgrade.soft_shoes.name",
+      "desc_key": "upgrade.soft_shoes.desc",
+      "max_tiers": 3,
+      "tier_costs": [80, 200, 500],
+      "noise_reduction_per_tier": 0.1
+    },
+    {
+      "id": "starting_rope",
+      "name_key": "upgrade.starting_rope.name",
+      "desc_key": "upgrade.starting_rope.desc",
+      "max_tiers": 1,
+      "tier_costs": [150],
+      "ropes_granted": 1
+    },
+    {
+      "id": "extra_heart",
+      "name_key": "upgrade.extra_heart.name",
+      "desc_key": "upgrade.extra_heart.desc",
+      "max_tiers": 1,
+      "tier_costs": [300],
+      "hp_granted": 1
+    },
+    {
+      "id": "stair_compass",
+      "name_key": "upgrade.stair_compass.name",
+      "desc_key": "upgrade.stair_compass.desc",
+      "max_tiers": 1,
+      "tier_costs": [250],
+      "reveal_stairs_uses": 1
+    },
+    {
+      "id": "reserve_oil",
+      "name_key": "upgrade.reserve_oil.name",
+      "desc_key": "upgrade.reserve_oil.desc",
+      "max_tiers": 1,
+      "tier_costs": [350],
+      "flask_on_even_floors": 1
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "id": "gold_nugget",
+      "name_key": "item.gold_nugget.name",
+      "desc_key": "item.gold_nugget.desc",
+      "multiplier": 1.0,
+      "weight": 60
+    },
+    {
+      "id": "gold_bar",
+      "name_key": "item.gold_bar.name",
+      "desc_key": "item.gold_bar.desc",
+      "multiplier": 2.5,
+      "weight": 25
+    },
+    {
+      "id": "rare_gem",
+      "name_key": "item.rare_gem.name",
+      "desc_key": "item.rare_gem.desc",
+      "multiplier": 4.0,
+      "weight": 10
+    },
+    {
+      "id": "oil_flask",
+      "name_key": "item.oil_flask.name",
+      "desc_key": "item.oil_flask.desc",
+      "oil_restore": 15,
+      "weight": 30
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "curses": [
+    {
+      "id": "stalker_haunt",
+      "name_key": "curse.stalker_haunt.name",
+      "desc_key": "curse.stalker_haunt.desc",
+      "effect": "spawn_stalker",
+      "weight": 25
+    },
+    {
+      "id": "blindness",
+      "name_key": "curse.blindness.name",
+      "desc_key": "curse.blindness.desc",
+      "effect": "reduce_light_radius",
+      "radius_delta": -1,
+      "weight": 25
+    },
+    {
+      "id": "heavy_footsteps",
+      "name_key": "curse.heavy_footsteps.name",
+      "desc_key": "curse.heavy_footsteps.desc",
+      "effect": "increase_noise",
+      "noise_multiplier": 1.5,
+      "weight": 25
+    },
+    {
+      "id": "darkness_tax",
+      "name_key": "curse.darkness_tax.name",
+      "desc_key": "curse.darkness_tax.desc",
+      "effect": "floor_transition_dread",
+      "dread_addition": 20,
+      "weight": 25
+    }
+  ]
+}

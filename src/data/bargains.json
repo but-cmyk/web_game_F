@@ -1,0 +1,84 @@
+{
+  "bargains": [
+    {
+      "id": "b1_oil_for_gold",
+      "name_key": "bargain.b1.name",
+      "cost_key": "bargain.b1.cost",
+      "reward_key": "bargain.b1.reward",
+      "cost_type": "oil_percentage",
+      "cost_value": 0.3,
+      "reward_type": "gold_multiplier",
+      "reward_value": 4.0
+    },
+    {
+      "id": "b2_hp_for_oil",
+      "name_key": "bargain.b2.name",
+      "cost_key": "bargain.b2.cost",
+      "reward_key": "bargain.b2.reward",
+      "cost_type": "hp_loss",
+      "cost_value": 1,
+      "reward_type": "oil_add",
+      "reward_value": 40
+    },
+    {
+      "id": "b3_light_for_gold",
+      "name_key": "bargain.b3.name",
+      "cost_key": "bargain.b3.cost",
+      "reward_key": "bargain.b3.reward",
+      "cost_type": "light_radius_delta",
+      "cost_value": -1,
+      "reward_type": "gold_multiplier",
+      "reward_value": 6.0
+    },
+    {
+      "id": "b4_noise_for_gold",
+      "name_key": "bargain.b4.name",
+      "cost_key": "bargain.b4.cost",
+      "reward_key": "bargain.b4.reward",
+      "cost_type": "noise_multiplier",
+      "cost_value": 1.3,
+      "reward_type": "gold_multiplier",
+      "reward_value": 5.0
+    },
+    {
+      "id": "b5_dread_for_oil",
+      "name_key": "bargain.b5.name",
+      "cost_key": "bargain.b5.cost",
+      "reward_key": "bargain.b5.reward",
+      "cost_type": "dread_add",
+      "cost_value": 25,
+      "reward_type": "oil_add",
+      "reward_value": 30
+    },
+    {
+      "id": "b6_gold_for_clarity",
+      "name_key": "bargain.b6.name",
+      "cost_key": "bargain.b6.cost",
+      "reward_key": "bargain.b6.reward",
+      "cost_type": "carried_gold_percentage",
+      "cost_value": 0.25,
+      "reward_type": "dread_reduce_and_reveal",
+      "reward_value": -40
+    },
+    {
+      "id": "b7_gold_for_rope",
+      "name_key": "bargain.b7.name",
+      "cost_key": "bargain.b7.cost",
+      "reward_key": "bargain.b7.reward",
+      "cost_type": "carried_gold_percentage",
+      "cost_value": 0.2,
+      "reward_type": "add_rope",
+      "reward_value": 1
+    },
+    {
+      "id": "b8_stalker_for_wealth",
+      "name_key": "bargain.b8.name",
+      "cost_key": "bargain.b8.cost",
+      "reward_key": "bargain.b8.reward",
+      "cost_type": "delayed_stalker",
+      "cost_value": 20,
+      "reward_type": "gold_multiplier",
+      "reward_value": 8.0
+    }
+  ]
+}

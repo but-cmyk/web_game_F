@@ -1,0 +1,32 @@
+{
+  "events": [
+    {
+      "id": "echoing_news",
+      "name_key": "event.echoing_news.name",
+      "desc_key": "event.echoing_news.desc",
+      "dread_delta": 5,
+      "weight": 20
+    },
+    {
+      "id": "abandoned_torch",
+      "name_key": "event.abandoned_torch.name",
+      "desc_key": "event.abandoned_torch.desc",
+      "dread_delta": -10,
+      "weight": 15
+    },
+    {
+      "id": "distant_groan",
+      "name_key": "event.distant_groan.name",
+      "desc_key": "event.distant_groan.desc",
+      "dread_delta": 8,
+      "weight": 25
+    },
+    {
+      "id": "gold_glimmer",
+      "name_key": "event.gold_glimmer.name",
+      "desc_key": "event.gold_glimmer.desc",
+      "bonus_gold": 20,
+      "weight": 15
+    }
+  ]
+}

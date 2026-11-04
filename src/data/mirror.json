@@ -1,0 +1,33 @@
+{
+  "archetypes": [
+    {
+      "id": "gold_digger",
+      "name_key": "archetype.gold_digger.name",
+      "desc_key": "archetype.gold_digger.desc",
+      "greed_min": 60,
+      "fear_max": 40
+    },
+    {
+      "id": "flamekeeper",
+      "name_key": "archetype.flamekeeper.name",
+      "desc_key": "archetype.flamekeeper.desc",
+      "greed_max": 40,
+      "fear_min": 60
+    },
+    {
+      "id": "trembling_walker",
+      "name_key": "archetype.trembling_walker.name",
+      "desc_key": "archetype.trembling_walker.desc",
+      "greed_min": 60,
+      "fear_min": 60
+    },
+    {
+      "id": "calculator",
+      "name_key": "archetype.calculator.name",
+      "desc_key": "archetype.calculator.desc",
+      "greed_max": 50,
+      "fear_max": 50
+    }
+  ],
+  "disclaimer_key": "mirror.disclaimer"
+}

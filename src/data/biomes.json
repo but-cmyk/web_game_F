@@ -1,0 +1,31 @@
+{
+  "biomes": [
+    {
+      "id": "stone_dungeon",
+      "name_key": "biome.stone_dungeon.name",
+      "desc_key": "biome.stone_dungeon.desc",
+      "start_depth": 1,
+      "end_depth": 4,
+      "ambient_color": "#241e1a",
+      "accent_color": "#f4d06f"
+    },
+    {
+      "id": "fungal_cavern",
+      "name_key": "biome.fungal_cavern.name",
+      "desc_key": "biome.fungal_cavern.desc",
+      "start_depth": 5,
+      "end_depth": 8,
+      "ambient_color": "#183a2b",
+      "accent_color": "#7bc48c"
+    },
+    {
+      "id": "abyssal_trench",
+      "name_key": "biome.abyssal_trench.name",
+      "desc_key": "biome.abyssal_trench.desc",
+      "start_depth": 9,
+      "end_depth": 12,
+      "ambient_color": "#1a1429",
+      "accent_color": "#7456b8"
+    }
+  ]
+}

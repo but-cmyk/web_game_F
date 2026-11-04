@@ -1,0 +1,35 @@
+{
+  "enemies": [
+    {
+      "id": "crawler",
+      "name_key": "enemy.crawler.name",
+      "desc_key": "enemy.crawler.desc",
+      "hp": 1,
+      "damage": 1,
+      "hearing_radius": 4,
+      "hearing_multiplier": 1.0,
+      "search_duration": 8,
+      "weight": 50
+    },
+    {
+      "id": "listener",
+      "name_key": "enemy.listener.name",
+      "desc_key": "enemy.listener.desc",
+      "hp": 2,
+      "damage": 1,
+      "hearing_radius": 5,
+      "howl_radius": 10,
+      "weight": 30
+    },
+    {
+      "id": "stalker",
+      "name_key": "enemy.stalker.name",
+      "desc_key": "enemy.stalker.desc",
+      "hp": 3,
+      "damage": 1,
+      "speed_turns_per_step": 2,
+      "min_depth": 8,
+      "weight": 10
+    }
+  ]
+}
