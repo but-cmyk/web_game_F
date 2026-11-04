@@ -9,7 +9,14 @@
 import { Coord, Direction, inBounds, toIndex } from './grid';
 import { DungeonFloor } from './mapgen';
 import { EventBus } from './events';
-import { GoldPile, pickupGold, OilFlask, pickupOilFlask } from './loot';
+import {
+  GoldPile,
+  pickupGold,
+  OilFlask,
+  pickupOilFlask,
+  Chest,
+  BargainPedestal,
+} from './loot';
 import { oilCostPerStep, calculateNoiseRadius, updateDread } from './fear';
 import {
   Monster,
@@ -24,6 +31,13 @@ import {
   spawnHallucination,
   updateHallucinations,
 } from './hallucinations';
+import {
+  Curse,
+  rollCursedChestCurse,
+  applyCurseNoiseModifier,
+  applyFloorTransitionCurses,
+} from './curses';
+import { resolveBargain, processRopeChannelTurn } from './bargains';
 import { Rng } from './rng';
 
 export type MovementMode = 'sneak' | 'walk' | 'run';
@@ -33,7 +47,10 @@ export type PlayerAction =
   | { readonly type: 'WAIT' }
   | { readonly type: 'DESCEND' }
   | { readonly type: 'EXTRACT' }
-  | { readonly type: 'SET_MODE'; readonly mode: MovementMode };
+  | { readonly type: 'SET_MODE'; readonly mode: MovementMode }
+  | { readonly type: 'USE_ROPE' }
+  | { readonly type: 'OPEN_CHEST'; readonly chestId: string }
+  | { readonly type: 'RESOLVE_BARGAIN'; readonly bargainId: string; readonly accepted: boolean };
 
 export interface TurnResult {
   readonly consumedTurn: boolean;
@@ -55,6 +72,13 @@ export interface DungeonState {
   dread: number;
   goldPiles: GoldPile[];
   oilFlasks: OilFlask[];
+  chests?: Chest[];
+  bargainPedestal?: BargainPedestal | null;
+  activeCurses?: Curse[];
+  ropeCount?: number;
+  escapeRopeTurnsRemaining?: number;
+  stairsRevealed?: boolean;
+  delayedStalkerTurns?: number;
   monsters?: Monster[];
   hallucinations?: Hallucination[];
   playerInvulnerableTurns?: number;
@@ -94,6 +118,81 @@ export class TurnResolver {
         return { consumedTurn: false };
       }
 
+      case 'USE_ROPE': {
+        if ((state.ropeCount ?? 0) > 0 && (state.escapeRopeTurnsRemaining ?? 0) === 0) {
+          state.ropeCount = (state.ropeCount ?? 0) - 1;
+          state.escapeRopeTurnsRemaining = 3;
+          state.turnCount += 1;
+          state.eventBus.emit('ExtractStarted', { depth: state.depth, turnsRemaining: 3 });
+          const postRes = TurnResolver.processPostPlayerTurn(state, []);
+          if (postRes.runEnded) return postRes;
+          return { consumedTurn: true };
+        }
+        return { consumedTurn: false };
+      }
+
+      case 'OPEN_CHEST': {
+        if (!state.chests) return { consumedTurn: false };
+        const chest = state.chests.find((c) => c.id === action.chestId);
+        if (!chest || chest.isOpen) return { consumedTurn: false };
+
+        chest.isOpen = true;
+        state.carriedGold += chest.goldValue;
+
+        if (chest.isCursed) {
+          const rng = state.rng ?? new Rng(state.turnCount + 1);
+          const curse = rollCursedChestCurse(rng);
+          if (!state.activeCurses) state.activeCurses = [];
+          state.activeCurses.push(curse);
+
+          if (curse.effect === 'spawn_stalker') {
+            if (!state.monsters) state.monsters = [];
+            state.monsters.push({
+              id: `stalker_curse_${state.turnCount}`,
+              type: 'stalker',
+              x: state.floor.entrance.x,
+              y: state.floor.entrance.y,
+              state: 'STALK',
+              hp: 3,
+              maxHp: 3,
+              damage: 1,
+              targetCoord: null,
+              stunnedTurns: 0,
+              searchTurnsRemaining: 0,
+              howlCooldown: 0,
+              lastSeenPlayerPos: null,
+              stepTurnCounter: 0,
+            });
+          }
+
+          state.eventBus.emit('ChestOpened', {
+            isCursed: true,
+            curseId: curse.id,
+            gold: chest.goldValue,
+          });
+        } else {
+          state.eventBus.emit('ChestOpened', {
+            isCursed: false,
+            gold: chest.goldValue,
+          });
+        }
+
+        state.turnCount += 1;
+        const postRes = TurnResolver.processPostPlayerTurn(state, []);
+        if (postRes.runEnded) return postRes;
+        return { consumedTurn: true };
+      }
+
+      case 'RESOLVE_BARGAIN': {
+        if (!state.bargainPedestal || state.bargainPedestal.isUsed) return { consumedTurn: false };
+        const bargain = state.bargainPedestal.bargains.find((b) => b.id === action.bargainId);
+        if (!bargain) return { consumedTurn: false };
+
+        resolveBargain(state, bargain, action.accepted);
+        state.bargainPedestal.isUsed = true;
+        return { consumedTurn: false };
+      }
+
       case 'WAIT': {
         state.turnCount += 1;
         const postRes = TurnResolver.processPostPlayerTurn(state, []);
@@ -108,6 +207,11 @@ export class TurnResolver {
 
         if (isAtStairs) {
           state.turnCount += 1;
+          state.dread = applyFloorTransitionCurses(
+            state.dread,
+            state.activeCurses ?? [],
+            state.eventBus
+          );
           return { consumedTurn: true, advancedFloor: true };
         }
         return { consumedTurn: false };
@@ -161,8 +265,9 @@ export class TurnResolver {
         const oilCost = oilCostPerStep(state.depth, state.movementMode);
         state.oil = Math.max(0, state.oil - oilCost);
 
-        // 2. Emit noise along path
-        const noiseRadius = calculateNoiseRadius(state.movementMode, state.dread);
+        // 2. Emit noise along path (modulated by active curses)
+        const baseNoise = calculateNoiseRadius(state.movementMode, state.dread);
+        const noiseRadius = applyCurseNoiseModifier(baseNoise, state.activeCurses ?? []);
         state.eventBus.emit('NoiseEmitted', {
           x: targetX,
           y: targetY,
@@ -328,6 +433,7 @@ export class TurnResolver {
     state.dread = halRes.newDread;
 
     // 5. Combat Collisions & Invulnerability
+    let hitOccurred = false;
     if (state.monsters && state.monsters.length > 0) {
       const collRes = resolveMonsterCollisions(
         state.monsters,
@@ -338,6 +444,7 @@ export class TurnResolver {
       );
       state.hp = collRes.playerHp;
       state.playerInvulnerableTurns = collRes.playerInvulnerableTurns;
+      hitOccurred = collRes.hitOccurred;
 
       if (collRes.hitOccurred && collRes.attackingMonster) {
         state.eventBus.emit('MonsterAttacked', {
@@ -349,6 +456,44 @@ export class TurnResolver {
 
       if (TurnResolver.checkDeath(state)) {
         return { consumedTurn: true, runEnded: 'died' };
+      }
+    }
+
+    // 6. Escape Rope Channeling
+    if (state.escapeRopeTurnsRemaining && state.escapeRopeTurnsRemaining > 0) {
+      const ropeRes = processRopeChannelTurn(
+        state,
+        state.escapeRopeTurnsRemaining,
+        hitOccurred
+      );
+      state.escapeRopeTurnsRemaining = ropeRes.turnsRemaining;
+      if (ropeRes.extracted) {
+        return { consumedTurn: true, runEnded: 'extracted' };
+      }
+    }
+
+    // 7. Delayed Stalker countdown from devil's bargain
+    if (state.delayedStalkerTurns !== undefined) {
+      state.delayedStalkerTurns -= 1;
+      if (state.delayedStalkerTurns <= 0) {
+        state.delayedStalkerTurns = undefined;
+        if (!state.monsters) state.monsters = [];
+        state.monsters.push({
+          id: `stalker_bargain_${state.turnCount}`,
+          type: 'stalker',
+          x: state.floor.entrance.x,
+          y: state.floor.entrance.y,
+          state: 'STALK',
+          hp: 3,
+          maxHp: 3,
+          damage: 1,
+          targetCoord: null,
+          stunnedTurns: 0,
+          searchTurnsRemaining: 0,
+          howlCooldown: 0,
+          lastSeenPlayerPos: null,
+          stepTurnCounter: 0,
+        });
       }
     }
 
