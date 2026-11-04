@@ -87,3 +87,4 @@ describe('Line of Sight & Circular FOV', () => {
     expect(fog.explored[tileAt1818]).toBe(true);
   });
 });
+

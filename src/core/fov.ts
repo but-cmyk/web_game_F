@@ -93,3 +93,4 @@ export function computeFOV(
 
   return visible;
 }
+
