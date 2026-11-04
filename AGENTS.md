@@ -31,6 +31,7 @@ tests/         deterministic unit and integration tests
 10. **Ethical Contract**: Strictly obey `.agents/rules/ethics-guardrails.md` at all times.
 11. **Language Protocol**: Converse with owner in Vietnamese; write code, comments, commits, and docs in English.
 12. **Definition of Done**: `npm run check` green + browser smoke test + screenshot + STATUS updated.
+13. **Quality Gates**: Load `/deeper-reliable-coding` before editing code, `/deeper-ui-ux-design` for anything the player sees or reads, `/deeper-debug` on any failure (reproduce first), and `/deeper-code-review` in self-review mode before the final report. Never claim success without a command output from this session.
 
 ## Skills Directory
 | Skill | When to Use |
@@ -42,4 +43,7 @@ tests/         deterministic unit and integration tests
 | `deeper-mirror-telemetry` | Mirror screen, greed/fear metrics, archetype cards, neutral copy, privacy |
 | `deeper-pixel-audio-pipeline` | DEEPER-24 palette, procedural visual placeholders, WebAudio SFX synthesis |
 | `deeper-qa-balance-release` | Vitest testing, balance simulation, performance profiling, packaging |
-
+| `deeper-reliable-coding` | Before writing or editing any code |
+| `deeper-ui-ux-design` | Any screen, HUD, dialog, label or touch control |
+| `deeper-debug` | Any failure or wrong behaviour |
+| `deeper-code-review` | Before the final report, or when asked to review |

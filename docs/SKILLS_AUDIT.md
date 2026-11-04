@@ -93,3 +93,67 @@ This document audits the triggering precision of each skill in the DEEPER agent 
   2. "Add a second sound effect when picking up gold" (Route to pixel audio pipeline)
 - **Self-Check**: Comprehensive coverage of testing, balance simulation, performance profiling, and release packaging.
 
+---
+
+## Quality skills (prompt 02B)
+
+### 8. deeper-ui-ux-design
+- **Description**: `"UI/UX design rules for DEEPER's pixel interface, covering screen layout on the 320x180 canvas, HUD, menus, modal choices (bargains, chests), Codex, Mirror, Settings, tutorial, touch controls, readable pixel text including Vietnamese diacritics, risk and odds hierarchy, feedback and microcopy, accessibility, and visual review with browser screenshots at desktop size and 360x640. Use whenever creating or changing any screen, HUD element, button, dialog, label, icon, layout, font, UI animation or player-facing text, even for a small tweak. Palette and asset files belong to deeper-pixel-audio-pipeline, Mirror wording belongs to deeper-mirror-telemetry."`
+- **Should Activate**:
+  1. "Redesign the run HUD to fit oil, Dread, HP and gold on 320x180"
+  2. "Create the cursed chest modal showing the four curse odds"
+  3. "Check if the Vietnamese font clips stacked diacritics in the dialog"
+- **Should NOT Activate**:
+  1. "Pick 24 colors for the DEEPER palette" (Route to deeper-pixel-audio-pipeline)
+  2. "The mirror copy sounds judgmental, make it neutral" (Route to deeper-mirror-telemetry)
+- **Self-Check**: Covers all UI, HUD, screen layouts, fonts, touch targets, and visual reviews.
+
+### 9. deeper-reliable-coding
+- **Description**: `"Bug-prevention protocol for writing any DEEPER code. Covers the acceptance-first and test-first loop, smallest-diff edits, type-driven design with discriminated unions and exhaustive switches, no any, invariants and assertions, grid boundary and off-by-one checks, numeric clamping, determinism rules, Phaser lifecycle and cleanup, error handling, and a mandatory self-review before reporting done. Use BEFORE writing or editing any TypeScript, JSON data, config or test in this repository, including quick fixes, refactors and trivial changes, because most bugs come from skipping these steps. To diagnose an existing failure use deeper-debug, to review a finished diff use deeper-code-review."`
+- **Should Activate**:
+  1. "Implement the Rng class with seeded forks and tests"
+  2. "Write the TurnResolver state step method"
+  3. "Add type definitions and invariants for monster movement modes"
+- **Should NOT Activate**:
+  1. "Why is this unit test failing with a timeout?" (Route to deeper-debug)
+  2. "Audit this pull request against the spec" (Route to deeper-code-review)
+- **Self-Check**: Strongly triggers before writing or modifying any TypeScript code or data schemas.
+
+### 10. deeper-debug
+- **Description**: `"Systematic debugging procedure for DEEPER. Reproduce first, quote the exact error, replay deterministically from a seed plus an action log, list hypotheses, bisect with git, add minimal temporary instrumentation, fix the root cause with a regression test, and stop after 3 failed attempts. Includes Phaser and Vite pitfalls and symptom-to-cause playbooks such as blank canvas, blurry pixels, input not firing, silent audio, core and scene out of sync, flaky tests, FPS drops and save corruption. Use whenever something fails or looks wrong, such as a red npm run check, a failing test, a console error, a crash, a wrong number, a visual glitch, or a milestone check that stays red. Never guess a fix before reproducing."`
+- **Should Activate**:
+  1. "npm run check fails with a TypeScript error in TurnResolver"
+  2. "The canvas is completely blank when opening the dev server"
+  3. "Why does the crawler monster freeze after losing line of sight?"
+- **Should NOT Activate**:
+  1. "Review my code before I submit the milestone" (Route to deeper-code-review)
+  2. "Write unit tests for the oil drain formula" (Route to deeper-reliable-coding)
+- **Self-Check**: Directly targeted at investigating, reproducing, and fixing defects and red checks.
+
+### 11. deeper-code-review
+- **Description**: `"Structured code review for DEEPER in two modes, self-review of your own diff before handoff and a read-only audit of a branch or milestone. Checks spec conformance against docs/IMPLEMENTATION_PLAN.md, correctness, determinism, architecture rules (no Phaser in src/core, no Math.random in core, numbers in JSON), ethics and accessibility, test quality, performance and maintainability, using an automated mechanical scan plus a severity-ranked findings table with file and line evidence. Use before closing any milestone, after finishing a feature, when the user says review, audit, check my code or PR, and whenever you are about to write the final report. Never edit files while reviewing unless explicitly asked."`
+- **Should Activate**:
+  1. "Review my milestone branch before handoff"
+  2. "Perform a read-only audit of milestone M2"
+  3. "Run mechanical-review and audit spec conformance"
+- **Should NOT Activate**:
+  1. "Fix the TypeError on line 52" (Route to deeper-debug)
+  2. "Build the modal confirmation dialogue" (Route to deeper-ui-ux-design)
+- **Self-Check**: Specifically claims pre-handoff self-review, branch audits, and mechanical rule scans.
+
+---
+
+## Boundary Tests (11 Skills Routing)
+
+| Ambiguous Prompt | Expected Skill(s) to Win | Rationale |
+|---|---|---|
+| "Make the bargain dialog show the numbers clearly" | `deeper-ui-ux-design` + `deeper-greed-systems` | UI design owns layout/clarity; greed systems owns exact data/costs |
+| "The Mirror sentence sounds judgmental" | `deeper-mirror-telemetry` | Mirror tone, neutral copy, and banned words belong to mirror telemetry |
+| "npm run check is red" | `deeper-debug` | Active check failure requires reproduction and root-cause debugging |
+| "Write the Rng class" | `deeper-reliable-coding` + `deeper-core-engine` | Code authoring invokes reliable coding; engine owns math/seed specs |
+| "Review my milestone branch" | `deeper-code-review` | Formal branch inspection invokes code-review audit mode |
+| "Why is the monster stuck in SEARCH?" | `deeper-debug` + `deeper-fear-systems` | Bug investigation routes to debug with fear FSM domain context |
+| "Generate placeholder tiles" | `deeper-pixel-audio-pipeline` | Procedural visual generation belongs to pixel audio pipeline |
+| "Tune the greedy bot" | `deeper-qa-balance-release` | Bot policies and balance simulator belong to QA balance release |
+
+

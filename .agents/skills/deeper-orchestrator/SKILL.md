@@ -61,3 +61,11 @@ Immediately stop and ask the owner when encountering:
 - When session context approaches ~60%, write handoff notes into `docs/STATUS.md` and request a new conversation.
 - When resuming an interrupted milestone, inspect `git log` and `docs/STATUS.md`, verify green tests, and continue from the latest green commit.
 
+## Quality gates (added by prompt 02B)
+- Before the first edit in the build phase, load `/deeper-reliable-coding`. For anything the player sees or reads (screen, HUD, dialog, label, touch control, UI sound cue), also load `/deeper-ui-ux-design`.
+- When any check, test or smoke step fails, or something looks wrong, load `/deeper-debug` and follow it. Do not try fixes before reproducing.
+- At the end of the verify phase, before handoff, load `/deeper-code-review` in self-review mode: run `node .agents/skills/deeper-code-review/scripts/mechanical-review.mjs --changed`, fix every BLOCKER and MAJOR inside the approved plan scope (at most 3 rounds), and copy the verdict and remaining findings into the walkthrough artifact.
+- In the final report, list the verification commands you actually ran and their results. Never state that something works unless a command output in this session shows it.
+- A request to review, audit or check a milestone means `/deeper-code-review` in audit mode: change no files.
+
+
