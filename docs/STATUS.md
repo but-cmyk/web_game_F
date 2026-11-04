@@ -1,12 +1,12 @@
 # DEEPER — Status
-Last updated: 2026-11-04 · Current milestone: M3
+Last updated: 2026-11-04 · Current milestone: M4
 
 | Milestone | State (todo/doing/review/done) | Branch | Notes |
 |---|---|---|---|
 | M0 | done | milestone/M0 | Bootstrap complete, canvas 320x180, palette DEEPER-24 |
 | M1 | done | milestone/M1 | Engine foundations, Rng, Grid, SaveStore, Data loaders |
 | M2 | done | milestone/M2 | Procedural BSP dungeon, turn resolution, FOV, Fog of War, RunScene |
-| M3 | review | milestone/M3 | Single run loop, gold collection, extraction, banking, Menu/Summary scenes |
+| M3 | done | milestone/M3 | Single run loop, gold collection, extraction, banking, Menu/Summary scenes |
 | M4 | todo | milestone/M4 | Fear I: Oil, Dread, AudioDirector |
 | M5 | todo | milestone/M5 | Fear II: Monsters FSM & Hallucinations |
 | M6 | todo | milestone/M6 | Greed I: Loot curves, Curses, Bargains, Codex |
@@ -23,5 +23,5 @@ None at present.
 None at present.
 
 ## Handoff notes for the next conversation
-Milestone M3 implementation and verification complete on branch `milestone/M3`. Ready for code review and merge to master, followed by Milestone M4 (Fear I: Oil, Dread, AudioDirector).
+Milestone M3 merged to master. Ready for Milestone M4 planning and implementation on branch `milestone/M4`.
 
