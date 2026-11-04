@@ -9,7 +9,7 @@ import Phaser from 'phaser';
 import { DungeonFloor, TileType } from '../core/mapgen';
 import { FogOfWar } from '../core/fov';
 import { toIndex } from '../core/grid';
-import { GoldPile } from '../core/loot';
+import { GoldPile, OilFlask } from '../core/loot';
 import { DEEPER_24, PALETTE, hexToNumber } from '../utils/palette';
 
 export const TILE_SIZE = 16;
@@ -19,6 +19,7 @@ export class DungeonRenderer {
   private floor: DungeonFloor;
   private tileImages: Phaser.GameObjects.Image[] = [];
   private goldImages: Map<string, Phaser.GameObjects.Image> = new Map();
+  private flaskImages: Map<string, Phaser.GameObjects.Image> = new Map();
   private playerSprite: Phaser.GameObjects.Image | null = null;
 
   constructor(scene: Phaser.Scene, floor: DungeonFloor) {
@@ -50,6 +51,9 @@ export class DungeonRenderer {
     }
     if (!this.scene.textures.exists('tile_gold')) {
       this.generateGoldTexture();
+    }
+    if (!this.scene.textures.exists('tile_oil_flask')) {
+      this.generateOilFlaskTexture();
     }
     if (!this.scene.textures.exists('spr_player')) {
       this.generatePlayerTexture();
@@ -245,6 +249,35 @@ export class DungeonRenderer {
     canvas.refresh();
   }
 
+  private generateOilFlaskTexture(): void {
+    const canvas = this.scene.textures.createCanvas('tile_oil_flask', TILE_SIZE, TILE_SIZE);
+    if (!canvas) return;
+    const ctx = canvas.context;
+
+    ctx.clearRect(0, 0, TILE_SIZE, TILE_SIZE);
+
+    // Flask neck and stopper (#5e3e11 Dark Bronze)
+    ctx.fillStyle = DEEPER_24[9];
+    ctx.fillRect(7, 3, 2, 2); // Stopper
+    ctx.fillRect(6, 5, 4, 2); // Lip
+
+    // Glass bulb outline (#352d27 & #161311)
+    ctx.fillStyle = DEEPER_24[3];
+    ctx.fillRect(5, 7, 6, 6);
+
+    // Glowing amber oil inside (#e09f3e & #f4d06f Radiant Gold)
+    ctx.fillStyle = DEEPER_24[11];
+    ctx.fillRect(6, 8, 4, 4);
+    ctx.fillStyle = DEEPER_24[12];
+    ctx.fillRect(6, 9, 3, 3);
+
+    // Glass reflection / glint (#fff1b0)
+    ctx.fillStyle = DEEPER_24[13];
+    ctx.fillRect(6, 7, 1, 2);
+
+    canvas.refresh();
+  }
+
   private getTextureForTile(type: TileType): string {
     switch (type) {
       case 'WALL':
@@ -360,6 +393,25 @@ export class DungeonRenderer {
         img.setVisible(false);
       }
     }
+
+    // Update oil flask lighting
+    for (const img of this.flaskImages.values()) {
+      const x = Math.floor(img.x / TILE_SIZE);
+      const y = Math.floor(img.y / TILE_SIZE);
+      const idx = toIndex(x, y, this.floor.width);
+
+      if (fog.visible[idx]) {
+        img.setVisible(true);
+        img.setAlpha(1.0);
+        img.clearTint();
+      } else if (fog.explored[idx]) {
+        img.setVisible(true);
+        img.setAlpha(0.35);
+        img.setTint(memoryTint);
+      } else {
+        img.setVisible(false);
+      }
+    }
   }
 
   /**
@@ -404,6 +456,46 @@ export class DungeonRenderer {
     }
   }
 
+  /**
+   * Synchronizes oil flask sprites with current active flasks on the floor.
+   */
+  public syncOilFlasks(flasks: readonly OilFlask[], fog: FogOfWar): void {
+    const activeIds = new Set<string>();
+    const memoryTint = hexToNumber(PALETTE.panelBorder);
+
+    for (const flask of flasks) {
+      activeIds.add(flask.id);
+      let img = this.flaskImages.get(flask.id);
+
+      if (!img) {
+        img = this.scene.add.image(flask.x * TILE_SIZE, flask.y * TILE_SIZE, 'tile_oil_flask');
+        img.setOrigin(0, 0);
+        img.setDepth(5);
+        this.flaskImages.set(flask.id, img);
+      }
+
+      const idx = toIndex(flask.x, flask.y, this.floor.width);
+      if (fog.visible[idx]) {
+        img.setVisible(true);
+        img.setAlpha(1.0);
+        img.clearTint();
+      } else if (fog.explored[idx]) {
+        img.setVisible(true);
+        img.setAlpha(0.35);
+        img.setTint(memoryTint);
+      } else {
+        img.setVisible(false);
+      }
+    }
+
+    for (const [id, img] of this.flaskImages.entries()) {
+      if (!activeIds.has(id)) {
+        img.destroy();
+        this.flaskImages.delete(id);
+      }
+    }
+  }
+
   public destroy(): void {
     for (const img of this.tileImages) {
       img.destroy();
@@ -413,6 +505,10 @@ export class DungeonRenderer {
       img.destroy();
     }
     this.goldImages.clear();
+    for (const img of this.flaskImages.values()) {
+      img.destroy();
+    }
+    this.flaskImages.clear();
     if (this.playerSprite) {
       this.playerSprite.destroy();
       this.playerSprite = null;

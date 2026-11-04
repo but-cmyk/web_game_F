@@ -192,6 +192,12 @@ export class TurnResolver {
           if (collectedAmount > 0) {
             state.oil = Math.min(state.maxOil, state.oil + collectedAmount);
             state.oilFlasks = remainingFlasks;
+            state.eventBus.emit('OilPicked', {
+              amount: collectedAmount,
+              currentOil: state.oil,
+              x: targetX,
+              y: targetY,
+            });
           }
         }
 

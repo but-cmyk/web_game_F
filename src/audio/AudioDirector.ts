@@ -67,7 +67,9 @@ export class AudioDirector {
 
       this.startAmbientDrone();
     } else if (this.ctx.state === 'suspended') {
-      this.ctx.resume().catch(() => {});
+      this.ctx.resume().catch((err: unknown) => {
+        void err;
+      });
     }
   }
 
@@ -127,8 +129,8 @@ export class AudioDirector {
       this.ambientOsc2.frequency.setValueAtTime(50, this.ctx.currentTime);
       this.ambientOsc2.connect(filter);
       this.ambientOsc2.start();
-    } catch {
-      // Graceful fallback on audio restrictions
+    } catch (_err) {
+      void _err;
     }
   }
 
@@ -198,8 +200,8 @@ export class AudioDirector {
 
       osc2.start(now + 0.12);
       osc2.stop(now + 0.25);
-    } catch {
-      // Ignore audio interruptions
+    } catch (_err) {
+      void _err;
     }
   }
 
@@ -230,8 +232,8 @@ export class AudioDirector {
 
       osc.start(now);
       osc.stop(now + duration + 0.01);
-    } catch {
-      // Ignore
+    } catch (_err) {
+      void _err;
     }
   }
 
@@ -269,8 +271,8 @@ export class AudioDirector {
       gain2.connect(this.sfxGain);
       osc2.start(now + 0.04);
       osc2.stop(now + 0.46);
-    } catch {
-      // Ignore
+    } catch (_err) {
+      void _err;
     }
   }
 
@@ -297,8 +299,8 @@ export class AudioDirector {
 
       osc.start(now);
       osc.stop(now + 0.3);
-    } catch {
-      // Ignore
+    } catch (_err) {
+      void _err;
     }
   }
 
@@ -310,24 +312,26 @@ export class AudioDirector {
     if (this.ambientOsc1) {
       try {
         this.ambientOsc1.stop();
-      } catch {
-        // Ignore audio shutdown error
+      } catch (_err) {
+        void _err;
       }
       this.ambientOsc1 = null;
     }
     if (this.ambientOsc2) {
       try {
         this.ambientOsc2.stop();
-      } catch {
-        // Ignore audio shutdown error
+      } catch (_err) {
+        void _err;
       }
       this.ambientOsc2 = null;
     }
     if (this.ctx && this.ctx.state !== 'closed') {
       try {
-        this.ctx.close().catch(() => {});
-      } catch {
-        // Ignore audio shutdown error
+        this.ctx.close().catch((err: unknown) => {
+          void err;
+        });
+      } catch (_err) {
+        void _err;
       }
       this.ctx = null;
     }

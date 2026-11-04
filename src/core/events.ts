@@ -38,6 +38,13 @@ export interface GoldPickedEvent {
   readonly y: number;
 }
 
+export interface OilPickedEvent {
+  readonly amount: number;
+  readonly currentOil: number;
+  readonly x: number;
+  readonly y: number;
+}
+
 export interface ChestOpenedEvent {
   readonly isCursed: boolean;
   readonly curseId?: string;
@@ -73,6 +80,7 @@ export interface GameEventMap {
   DreadChanged: DreadChangedEvent;
   MonsterStateChanged: MonsterStateChangedEvent;
   GoldPicked: GoldPickedEvent;
+  OilPicked: OilPickedEvent;
   ChestOpened: ChestOpenedEvent;
   BargainOffered: BargainOfferedEvent;
   BargainResolved: BargainResolvedEvent;
