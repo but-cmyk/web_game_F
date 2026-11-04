@@ -13,6 +13,7 @@ import { FogOfWar, createFogOfWar, updateFogOfWar, computeFOV } from '../core/fo
 import { toIndex } from '../core/grid';
 import { DungeonRenderer, TILE_SIZE } from '../views/DungeonRenderer';
 import { PALETTE, hexToNumber } from '../utils/palette';
+import { t } from '../i18n';
 
 export interface RunSceneData {
   readonly seed?: number;
@@ -97,7 +98,7 @@ export class RunScene extends Phaser.Scene {
 
     // Depth indicator
     this.add
-      .text(8, 3, `DEPTH ${this.state.depth}`, {
+      .text(8, 3, t('hud.depth', { depth: this.state.depth }).toUpperCase(), {
         fontSize: '8px',
         color: PALETTE.goldAccent,
         fontFamily: 'monospace',
@@ -108,7 +109,7 @@ export class RunScene extends Phaser.Scene {
 
     // Turn indicator
     this.turnText = this.add
-      .text(76, 3, `TURN ${this.state.turnCount}`, {
+      .text(76, 3, t('hud.turn', { turn: this.state.turnCount }).toUpperCase(), {
         fontSize: '8px',
         color: PALETTE.text,
         fontFamily: 'monospace',
@@ -118,7 +119,7 @@ export class RunScene extends Phaser.Scene {
 
     // FPS counter (upper-right)
     this.fpsText = this.add
-      .text(320 - 48, 3, 'FPS 60', {
+      .text(320 - 48, 3, t('hud.fps', { fps: 60 }), {
         fontSize: '8px',
         color: PALETTE.focus,
         fontFamily: 'monospace',
@@ -128,7 +129,7 @@ export class RunScene extends Phaser.Scene {
 
     // Mobile / Keyboard Hint (lower center, subtle)
     this.add
-      .text(160, 172, 'WASD / ARROWS / SWIPE', {
+      .text(160, 172, t('hud.controls_hint'), {
         fontSize: '7px',
         color: PALETTE.textDim,
         fontFamily: 'monospace',
@@ -201,7 +202,7 @@ export class RunScene extends Phaser.Scene {
     if (result.consumedTurn) {
       this.dungeonRenderer.updatePlayerPosition(this.state.playerPos.x, this.state.playerPos.y);
       this.recomputeFOV();
-      this.turnText.setText(`TURN ${this.state.turnCount}`);
+      this.turnText.setText(t('hud.turn', { turn: this.state.turnCount }).toUpperCase());
     }
   }
 
@@ -226,7 +227,7 @@ export class RunScene extends Phaser.Scene {
 
   override update(): void {
     const fps = Math.round(this.game.loop.actualFps);
-    this.fpsText.setText(`FPS ${fps}`);
+    this.fpsText.setText(t('hud.fps', { fps }));
   }
 
   /**

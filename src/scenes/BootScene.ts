@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { DEEPER_24, PALETTE, hexToNumber } from '../utils/palette';
+import { t } from '../i18n';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -14,7 +15,7 @@ export class BootScene extends Phaser.Scene {
 
     // Title
     this.add
-      .text(width / 2, 26, 'D E E P E R', {
+      .text(width / 2, 26, t('game.title_display'), {
         fontSize: '18px',
         color: PALETTE.goldAccent,
         fontFamily: 'monospace',
@@ -24,7 +25,7 @@ export class BootScene extends Phaser.Scene {
 
     // Subtitle
     this.add
-      .text(width / 2, 46, 'PUSH-YOUR-LUCK ROGUELIKE', {
+      .text(width / 2, 46, t('game.subtitle').toUpperCase(), {
         fontSize: '8px',
         color: PALETTE.textDim,
         fontFamily: 'monospace',
@@ -33,7 +34,7 @@ export class BootScene extends Phaser.Scene {
 
     // Section header: Palette swatches
     this.add
-      .text(width / 2, 68, 'PALETTE DEEPER-24', {
+      .text(width / 2, 68, t('boot.palette_title'), {
         fontSize: '8px',
         color: PALETTE.text,
         fontFamily: 'monospace',
@@ -69,7 +70,7 @@ export class BootScene extends Phaser.Scene {
 
     // Technical footer
     this.add
-      .text(width / 2, 142, '320x180 PIXEL-PERFECT CANVAS', {
+      .text(width / 2, 142, t('boot.canvas_info').toUpperCase(), {
         fontSize: '8px',
         color: PALETTE.focus,
         fontFamily: 'monospace',
@@ -77,7 +78,7 @@ export class BootScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(width / 2, 156, 'PRESS ANY KEY OR TAP TO ENTER DUNGEON', {
+      .text(width / 2, 156, t('boot.press_start'), {
         fontSize: '8px',
         color: PALETTE.goldAccent,
         fontFamily: 'monospace',
