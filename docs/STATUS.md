@@ -1,11 +1,11 @@
 # DEEPER — Status
-Last updated: 2026-11-04 · Current milestone: M2
+Last updated: 2026-11-04 · Current milestone: M3
 
 | Milestone | State (todo/doing/review/done) | Branch | Notes |
 |---|---|---|---|
 | M0 | done | milestone/M0 | Bootstrap complete, canvas 320x180, palette DEEPER-24 |
 | M1 | done | milestone/M1 | Engine foundations, Rng, Grid, SaveStore, Data loaders |
-| M2 | review | milestone/M2 | Procedural BSP dungeon, turn resolution, FOV, Fog of War, RunScene |
+| M2 | done | milestone/M2 | Procedural BSP dungeon, turn resolution, FOV, Fog of War, RunScene |
 | M3 | todo | milestone/M3 | Single run loop, extraction, banking |
 | M4 | todo | milestone/M4 | Fear I: Oil, Dread, AudioDirector |
 | M5 | todo | milestone/M5 | Fear II: Monsters FSM & Hallucinations |
@@ -23,5 +23,5 @@ None at present.
 None at present.
 
 ## Handoff notes for the next conversation
-Milestone M2 implementation and verification complete on branch `milestone/M2`. Ready for code review and merge to master, followed by Milestone M3.
+Milestone M2 merged to master. Ready for Milestone M3 planning and implementation on branch `milestone/M3`.
 
