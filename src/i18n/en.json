@@ -1,0 +1,16 @@
+{
+  "action.accept": "Accept",
+  "action.decline": "Decline",
+  "action.extract": "Extract & Bank Gold",
+  "boot.canvas_info": "320x180 Pixel-Perfect Canvas",
+  "boot.ready": "M0 Bootstrap Ready for M1",
+  "game.subtitle": "Push-Your-Luck Dungeon Roguelike",
+  "game.title": "DEEPER — Into the Dark",
+  "hud.depth": "Floor {depth}",
+  "hud.dread": "Dread: {dread}",
+  "hud.gold": "Gold: {gold}",
+  "hud.hp": "HP: {hp}",
+  "hud.oil": "Oil: {oil}%",
+  "menu.settings": "Settings",
+  "menu.start": "Start the Run"
+}

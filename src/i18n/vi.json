@@ -1,0 +1,16 @@
+{
+  "action.accept": "Đồng ý",
+  "action.decline": "Từ chối",
+  "action.extract": "Rút lui & Gửi vàng",
+  "boot.canvas_info": "Canvas 320x180 Pixel-Perfect",
+  "boot.ready": "M0 Bootstrap Sẵn sàng cho M1",
+  "game.subtitle": "Roguelike Đẩy Vận May Hầm Mỏ",
+  "game.title": "DEEPER — Sâu Thêm Chút Nữa",
+  "hud.depth": "Tầng {depth}",
+  "hud.dread": "Nỗi sợ: {dread}",
+  "hud.gold": "Vàng: {gold}",
+  "hud.hp": "Máu: {hp}",
+  "hud.oil": "Dầu: {oil}%",
+  "menu.settings": "Cài đặt",
+  "menu.start": "Bắt đầu cuộc thám hiểm"
+}
