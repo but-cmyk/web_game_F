@@ -3,8 +3,8 @@ Last updated: 2026-11-04 · Current milestone: M0
 
 | Milestone | State (todo/doing/review/done) | Branch | Notes |
 |---|---|---|---|
-| M0 | review | milestone/M0 | Bootstrap complete, check green, walkthrough ready |
-| M1 | todo | milestone/M1 | Engine foundations, Rng, Grid, SaveStore |
+| M0 | done | milestone/M0 | Bootstrap complete, canvas 320x180, palette DEEPER-24 |
+| M1 | doing | milestone/M1 | Engine foundations, Rng, Grid, SaveStore, Data loaders |
 | M2 | todo | milestone/M2 | Dungeon generation & grid movement |
 | M3 | todo | milestone/M3 | Single run loop, extraction, banking |
 | M4 | todo | milestone/M4 | Fear I: Oil, Dread, AudioDirector |
