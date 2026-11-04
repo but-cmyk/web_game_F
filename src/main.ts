@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene';
+import { RunScene } from './scenes/RunScene';
 import { hexToNumber, PALETTE } from './utils/palette';
 
 export const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
@@ -21,7 +22,7 @@ export const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
     pixelArt: true,
     roundPixels: true,
   },
-  scene: [BootScene],
+  scene: [BootScene, RunScene],
 };
 
 window.addEventListener('DOMContentLoaded', () => {

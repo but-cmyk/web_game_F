@@ -77,12 +77,25 @@ export class BootScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(width / 2, 156, 'M0 BOOTSTRAP COMPLETE · READY FOR M1', {
+      .text(width / 2, 156, 'PRESS ANY KEY OR TAP TO ENTER DUNGEON', {
         fontSize: '8px',
-        color: PALETTE.textDim,
+        color: PALETTE.goldAccent,
         fontFamily: 'monospace',
+        fontStyle: 'bold',
       })
       .setOrigin(0.5);
+
+    // Transition on keydown, pointerdown, or auto-delay
+    let transitioned = false;
+    const enterRun = () => {
+      if (transitioned) return;
+      transitioned = true;
+      this.scene.start('RunScene');
+    };
+
+    this.input.keyboard?.once('keydown', enterRun);
+    this.input.once('pointerdown', enterRun);
+    this.time.delayedCall(1200, enterRun);
   }
 }
 
