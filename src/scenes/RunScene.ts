@@ -23,6 +23,7 @@ import {
 import { spawnMonsters } from '../core/monsters';
 import { calculateLightRadius } from '../core/fear';
 import { applyCurseLightModifier } from '../core/curses';
+import { applyUpgradesToState } from '../core/upgrades';
 import { DungeonRenderer, TILE_SIZE } from '../views/DungeonRenderer';
 import { PostFX } from '../views/PostFX';
 import { defaultAudioDirector } from '../audio/AudioDirector';
@@ -72,7 +73,8 @@ export class RunScene extends Phaser.Scene {
   create(data?: RunSceneData): void {
     const seed = data?.seed ?? Date.now();
     const depth = data?.depth ?? 1;
-    const bankedGold = data?.bankedGold ?? defaultSaveStore.load().bankedGold;
+    const save = defaultSaveStore.load();
+    const bankedGold = data?.bankedGold ?? save.bankedGold;
 
     this.rng = new Rng(seed);
     this.floor = generateDungeon(this.rng, depth);
@@ -110,7 +112,11 @@ export class RunScene extends Phaser.Scene {
       isDead: false,
       eventBus: this.eventBus,
       rng: this.rng,
+      upgrades: save.upgrades,
     };
+
+    // Apply persistent meta-upgrades
+    applyUpgradesToState(this.state, this.state.upgrades ?? {});
 
     this.fog = createFogOfWar(this.floor.width, this.floor.height);
     this.dungeonRenderer = new DungeonRenderer(this, this.floor);
@@ -888,6 +894,9 @@ export class RunScene extends Phaser.Scene {
     this.state.bargainPedestal = spawnBargainPedestal(this.floor, this.state.depth, this.rng);
     this.state.monsters = spawnMonsters(this.floor, this.state.depth, this.rng);
     this.state.hallucinations = [];
+
+    // Apply floor-advancement upgrades (e.g. reserve oil on even floors)
+    applyUpgradesToState(this.state, this.state.upgrades ?? {});
 
     this.fog = createFogOfWar(this.floor.width, this.floor.height);
     this.dungeonRenderer.destroy();

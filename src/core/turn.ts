@@ -7,6 +7,7 @@
  */
 
 import { Coord, Direction, inBounds, toIndex } from './grid';
+export type { Coord, Direction };
 import { DungeonFloor } from './mapgen';
 import { EventBus } from './events';
 import {
@@ -38,6 +39,7 @@ import {
   applyFloorTransitionCurses,
 } from './curses';
 import { resolveBargain, processRopeChannelTurn } from './bargains';
+import { calculateNoiseWithBoots } from './upgrades';
 import { Rng } from './rng';
 
 export type MovementMode = 'sneak' | 'walk' | 'run';
@@ -87,6 +89,7 @@ export interface DungeonState {
   isDead: boolean;
   eventBus: EventBus;
   rng?: Rng;
+  upgrades?: Readonly<Record<string, number>>;
 }
 
 function getDelta(direction: Direction): Coord {
@@ -265,8 +268,12 @@ export class TurnResolver {
         const oilCost = oilCostPerStep(state.depth, state.movementMode);
         state.oil = Math.max(0, state.oil - oilCost);
 
-        // 2. Emit noise along path (modulated by active curses)
-        const baseNoise = calculateNoiseRadius(state.movementMode, state.dread);
+        // 2. Emit noise along path (modulated by soft_shoes upgrade and active curses)
+        let baseNoise = calculateNoiseRadius(state.movementMode, state.dread);
+        const softShoesTier = state.upgrades?.['soft_shoes'] ?? 0;
+        if (softShoesTier > 0) {
+          baseNoise = calculateNoiseWithBoots(baseNoise, softShoesTier);
+        }
         const noiseRadius = applyCurseNoiseModifier(baseNoise, state.activeCurses ?? []);
         state.eventBus.emit('NoiseEmitted', {
           x: targetX,

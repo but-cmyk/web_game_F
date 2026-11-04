@@ -7,6 +7,7 @@ import { Rng } from './rng';
 import { Coord, toIndex } from './grid';
 import { DungeonFloor } from './mapgen';
 import { isBargainFloor, selectFloorBargains, Bargain } from './bargains';
+import itemsData from '../data/items.json';
 
 export interface GoldPile {
   readonly id: string;
@@ -112,7 +113,7 @@ export function pickupGold(
  */
 export function spawnOilFlasks(floor: DungeonFloor, depth: number, rng: Rng): OilFlask[] {
   const count = rng.nextInt(2, 3);
-  const amount = 15;
+  const amount = itemsData.items.find((i) => i.id === 'oil_flask')?.oil_restore ?? 25;
 
   const candidates: Coord[] = [];
   for (let y = 0; y < floor.height; y++) {

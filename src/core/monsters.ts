@@ -105,16 +105,24 @@ export function spawnMonsters(floor: DungeonFloor, depth: number, rng: Rng): Mon
     }
   }
 
+  // Prefer spawning inside rooms so monsters do not permanently plug 1-tile corridors
+  const roomCandidates = floor.rooms && floor.rooms.length > 0
+    ? candidates.filter((c) =>
+        floor.rooms.some((r) => c.x >= r.x && c.x < r.x + r.w && c.y >= r.y && c.y < r.y + r.h)
+      )
+    : [];
+  const spawnPool = roomCandidates.length >= count ? roomCandidates : candidates;
+
   const enemyDefs = enemiesData.enemies;
   const crawlerDef = enemyDefs.find((e) => e.id === 'crawler')!;
   const listenerDef = enemyDefs.find((e) => e.id === 'listener')!;
   const stalkerDef = enemyDefs.find((e) => e.id === 'stalker')!;
 
   for (let i = 0; i < count; i++) {
-    if (candidates.length === 0) break;
+    if (spawnPool.length === 0) break;
 
-    const candIndex = rng.nextInt(0, candidates.length - 1);
-    const pos = candidates.splice(candIndex, 1)[0];
+    const candIndex = rng.nextInt(0, spawnPool.length - 1);
+    const pos = spawnPool.splice(candIndex, 1)[0];
     occupied.add(`${pos.x},${pos.y}`);
 
     // Choose enemy type based on weights and depth
@@ -394,9 +402,9 @@ export function updateMonsterFSM(
     }
 
     if (monster.state === 'IDLE' && monster.howlCooldown === 0) {
-      // Check noise within 5 BFS tiles
+      // Check noise within hearing radius and noise radius
       for (const noise of noiseEvents) {
-        const distances = propagateBFS(noise, 5, isPassable);
+        const distances = propagateBFS(noise, Math.min(5, noise.radius), isPassable);
         const dist = distances.get(`${monster.x},${monster.y}`);
         if (dist !== undefined) {
           monster.state = 'HOWL';

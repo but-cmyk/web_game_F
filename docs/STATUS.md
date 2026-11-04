@@ -10,7 +10,7 @@ Last updated: 2026-11-04 · Current milestone: M7
 | M4 | done | milestone/M4 | Fear I: Oil, Dread, AudioDirector, PostFX, noise rings |
 | M5 | done | milestone/M5 | Fear II: Monsters FSM & Hallucinations |
 | M6 | done | milestone/M6 | Greed I: Loot curves, Curses, Bargains, Codex |
-| M7 | todo | milestone/M7 | Greed II: Shop, Meta upgrades, Balance sim |
+| M7 | review | milestone/M7 | Greed II: Shop, Meta upgrades, Balance sim verified |
 | M8 | todo | milestone/M8 | Mirror screen & Tutorial |
 | M9 | todo | milestone/M9 | Biomes, polish, touch controls, settings |
 | M10 | todo | milestone/M10 | Social corpse system, data consent |
@@ -23,4 +23,4 @@ None at present.
 None at present.
 
 ## Handoff notes for the next conversation
-Milestone M6 merged to `master`. Ready to plan and implement Milestone M7 (Greed II: Shop, Meta upgrades, Balance sim).
+Milestone M7 verified: ShopScene meta-upgrades implemented, full unit tests pass (121/121), balance simulation completed, browser smoke test verified with smoke-m7.png screenshot. Ready for user review to close M7 and proceed to M8.

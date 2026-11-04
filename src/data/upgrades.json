@@ -13,7 +13,7 @@
       "name_key": "upgrade.soft_shoes.name",
       "desc_key": "upgrade.soft_shoes.desc",
       "max_tiers": 3,
-      "tier_costs": [80, 200, 500],
+      "tier_costs": [25, 75, 150],
       "noise_reduction_per_tier": 0.1
     },
     {
@@ -21,7 +21,7 @@
       "name_key": "upgrade.starting_rope.name",
       "desc_key": "upgrade.starting_rope.desc",
       "max_tiers": 1,
-      "tier_costs": [150],
+      "tier_costs": [35],
       "ropes_granted": 1
     },
     {
@@ -37,7 +37,7 @@
       "name_key": "upgrade.stair_compass.name",
       "desc_key": "upgrade.stair_compass.desc",
       "max_tiers": 1,
-      "tier_costs": [250],
+      "tier_costs": [50],
       "reveal_stairs_uses": 1
     },
     {
@@ -45,7 +45,7 @@
       "name_key": "upgrade.reserve_oil.name",
       "desc_key": "upgrade.reserve_oil.desc",
       "max_tiers": 1,
-      "tier_costs": [350],
+      "tier_costs": [60],
       "flask_on_even_floors": 1
     }
   ]
