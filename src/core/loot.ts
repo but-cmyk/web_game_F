@@ -6,6 +6,7 @@
 import { Rng } from './rng';
 import { Coord, toIndex } from './grid';
 import { DungeonFloor } from './mapgen';
+import { isBargainFloor, selectFloorBargains, Bargain } from './bargains';
 
 export interface GoldPile {
   readonly id: string;
@@ -19,6 +20,22 @@ export interface OilFlask {
   readonly x: number;
   readonly y: number;
   readonly amount: number;
+}
+
+export interface Chest {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+  readonly isCursed: boolean;
+  readonly goldValue: number;
+  isOpen: boolean;
+}
+
+export interface BargainPedestal {
+  readonly x: number;
+  readonly y: number;
+  readonly bargains: readonly Bargain[];
+  isUsed: boolean;
 }
 
 /**
@@ -128,6 +145,109 @@ export function spawnOilFlasks(floor: DungeonFloor, depth: number, rng: Rng): Oi
   }
 
   return flasks;
+}
+
+/**
+ * Deterministically spawns chests (standard 3x lootValue and cursed 4.5x lootValue).
+ */
+export function spawnChests(floor: DungeonFloor, depth: number, rng: Rng): Chest[] {
+  const chests: Chest[] = [];
+  const baseValue = lootValue(depth);
+
+  const candidates: Coord[] = [];
+  for (let y = 0; y < floor.height; y++) {
+    for (let x = 0; x < floor.width; x++) {
+      const idx = toIndex(x, y, floor.width);
+      if (floor.tiles[idx] !== 'FLOOR') continue;
+      if (x === floor.entrance.x && y === floor.entrance.y) continue;
+      if (x === floor.stairsDown.x && y === floor.stairsDown.y) continue;
+      if (floor.extractionStation && x === floor.extractionStation.x && y === floor.extractionStation.y) continue;
+      candidates.push({ x, y });
+    }
+  }
+
+  if (candidates.length === 0) return chests;
+
+  // 1 standard chest (worth 3x lootValue)
+  const pick1 = candidates.splice(rng.nextInt(0, candidates.length - 1), 1)[0];
+  chests.push({
+    id: `chest_std_${depth}_${pick1.x}_${pick1.y}`,
+    x: pick1.x,
+    y: pick1.y,
+    isCursed: false,
+    goldValue: baseValue * 3,
+    isOpen: false,
+  });
+
+  // Cursed chest from depth >= 2 with 50% probability
+  if (depth >= 2 && candidates.length > 0 && rng.nextInt(1, 100) <= 50) {
+    const pick2 = candidates.splice(rng.nextInt(0, candidates.length - 1), 1)[0];
+    chests.push({
+      id: `chest_cursed_${depth}_${pick2.x}_${pick2.y}`,
+      x: pick2.x,
+      y: pick2.y,
+      isCursed: true,
+      goldValue: Math.round(baseValue * 4.5),
+      isOpen: false,
+    });
+  }
+
+  return chests;
+}
+
+/**
+ * Spawns an obsidian devil's bargain altar on even floors (depth 2, 4, 6, 8, 10).
+ */
+export function spawnBargainPedestal(
+  floor: DungeonFloor,
+  depth: number,
+  rng: Rng
+): BargainPedestal | null {
+  if (!isBargainFloor(depth)) return null;
+
+  const candidates: Coord[] = [];
+  for (let y = 0; y < floor.height; y++) {
+    for (let x = 0; x < floor.width; x++) {
+      const idx = toIndex(x, y, floor.width);
+      if (floor.tiles[idx] !== 'FLOOR') continue;
+      if (x === floor.entrance.x && y === floor.entrance.y) continue;
+      if (x === floor.stairsDown.x && y === floor.stairsDown.y) continue;
+      candidates.push({ x, y });
+    }
+  }
+
+  if (candidates.length === 0) return null;
+
+  const pick = candidates[rng.nextInt(0, candidates.length - 1)];
+  const bargains = selectFloorBargains(rng);
+
+  return {
+    x: pick.x,
+    y: pick.y,
+    bargains,
+    isUsed: false,
+  };
+}
+
+/**
+ * Checks if a chest is at target position, returns opened chest if found.
+ */
+export function pickupChest(
+  chests: readonly Chest[],
+  pos: Coord
+): { remainingChests: Chest[]; openedChest: Chest | null } {
+  let openedChest: Chest | null = null;
+  const remainingChests: Chest[] = [];
+
+  for (const c of chests) {
+    if (c.x === pos.x && c.y === pos.y && !c.isOpen) {
+      openedChest = { ...c, isOpen: true };
+    } else {
+      remainingChests.push(c);
+    }
+  }
+
+  return { remainingChests, openedChest };
 }
 
 /**

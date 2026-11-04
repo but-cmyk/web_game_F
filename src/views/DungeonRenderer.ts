@@ -9,7 +9,7 @@ import Phaser from 'phaser';
 import { DungeonFloor, TileType } from '../core/mapgen';
 import { FogOfWar } from '../core/fov';
 import { toIndex } from '../core/grid';
-import { GoldPile, OilFlask } from '../core/loot';
+import { GoldPile, OilFlask, Chest, BargainPedestal } from '../core/loot';
 import { Monster } from '../core/monsters';
 import { Hallucination } from '../core/hallucinations';
 import { DEEPER_24, PALETTE, hexToNumber } from '../utils/palette';
@@ -22,6 +22,8 @@ export class DungeonRenderer {
   private tileImages: Phaser.GameObjects.Image[] = [];
   private goldImages: Map<string, Phaser.GameObjects.Image> = new Map();
   private flaskImages: Map<string, Phaser.GameObjects.Image> = new Map();
+  private chestImages: Map<string, Phaser.GameObjects.Image> = new Map();
+  private pedestalImage: Phaser.GameObjects.Image | null = null;
   private monsterImages: Map<string, Phaser.GameObjects.Image> = new Map();
   private monsterOverheads: Map<string, Phaser.GameObjects.Image> = new Map();
   private hallucinationImages: Map<string, Phaser.GameObjects.Image> = new Map();
@@ -59,6 +61,15 @@ export class DungeonRenderer {
     }
     if (!this.scene.textures.exists('tile_oil_flask')) {
       this.generateOilFlaskTexture();
+    }
+    if (!this.scene.textures.exists('tile_chest')) {
+      this.generateChestTexture();
+    }
+    if (!this.scene.textures.exists('tile_cursed_chest')) {
+      this.generateCursedChestTexture();
+    }
+    if (!this.scene.textures.exists('tile_bargain_altar')) {
+      this.generateBargainAltarTexture();
     }
     if (!this.scene.textures.exists('spr_crawler')) {
       this.generateCrawlerTexture();
@@ -294,6 +305,94 @@ export class DungeonRenderer {
     // Glass reflection / glint (#fff1b0)
     ctx.fillStyle = DEEPER_24[13];
     ctx.fillRect(6, 7, 1, 2);
+
+    canvas.refresh();
+  }
+
+  private generateChestTexture(): void {
+    const canvas = this.scene.textures.createCanvas('tile_chest', TILE_SIZE, TILE_SIZE);
+    if (!canvas) return;
+    const ctx = canvas.context;
+    ctx.clearRect(0, 0, TILE_SIZE, TILE_SIZE);
+
+    // Chest wooden body (#5e3e11 & #9e6b22)
+    ctx.fillStyle = DEEPER_24[9];
+    ctx.fillRect(2, 4, 12, 10);
+    ctx.fillStyle = DEEPER_24[10];
+    ctx.fillRect(3, 5, 10, 8);
+
+    // Metal reinforcement bands (#4a3e35 & #e09f3e)
+    ctx.fillStyle = DEEPER_24[4];
+    ctx.fillRect(2, 4, 12, 1);
+    ctx.fillRect(2, 8, 12, 1);
+    ctx.fillRect(4, 4, 1, 10);
+    ctx.fillRect(11, 4, 1, 10);
+
+    // Bronze Lock (#f4d06f Radiant Gold, #fff1b0 Sparkle)
+    ctx.fillStyle = DEEPER_24[12];
+    ctx.fillRect(7, 7, 2, 3);
+    ctx.fillStyle = DEEPER_24[13];
+    ctx.fillRect(7, 7, 1, 1);
+
+    canvas.refresh();
+  }
+
+  private generateCursedChestTexture(): void {
+    const canvas = this.scene.textures.createCanvas('tile_cursed_chest', TILE_SIZE, TILE_SIZE);
+    if (!canvas) return;
+    const ctx = canvas.context;
+    ctx.clearRect(0, 0, TILE_SIZE, TILE_SIZE);
+
+    // Obsidian body (#161311 & #2f1b25)
+    ctx.fillStyle = DEEPER_24[1];
+    ctx.fillRect(2, 4, 12, 10);
+    ctx.fillStyle = DEEPER_24[14];
+    ctx.fillRect(3, 5, 10, 8);
+
+    // Cursed crimson veins / bands (#992b45 & #d04648)
+    ctx.fillStyle = DEEPER_24[16];
+    ctx.fillRect(2, 4, 12, 1);
+    ctx.fillRect(2, 8, 12, 1);
+    ctx.fillRect(4, 4, 1, 10);
+    ctx.fillRect(11, 4, 1, 10);
+
+    // Glowing skull lock (#d04648 Crimson Flame & eye sockets)
+    ctx.fillStyle = DEEPER_24[17];
+    ctx.fillRect(6, 6, 4, 4);
+    ctx.fillStyle = DEEPER_24[0];
+    ctx.fillRect(7, 7, 1, 1);
+    ctx.fillRect(8, 7, 1, 1);
+    ctx.fillStyle = DEEPER_24[18];
+    ctx.fillRect(7, 9, 2, 1);
+
+    canvas.refresh();
+  }
+
+  private generateBargainAltarTexture(): void {
+    const canvas = this.scene.textures.createCanvas('tile_bargain_altar', TILE_SIZE, TILE_SIZE);
+    if (!canvas) return;
+    const ctx = canvas.context;
+    ctx.clearRect(0, 0, TILE_SIZE, TILE_SIZE);
+
+    // Base stone pedestal (#241e1a & #352d27)
+    ctx.fillStyle = DEEPER_24[2];
+    ctx.fillRect(2, 11, 12, 4);
+    ctx.fillStyle = DEEPER_24[3];
+    ctx.fillRect(4, 7, 8, 5);
+    ctx.fillStyle = DEEPER_24[4];
+    ctx.fillRect(3, 5, 10, 3);
+
+    // Ritual brazier bowl (#161311)
+    ctx.fillStyle = DEEPER_24[1];
+    ctx.fillRect(4, 4, 8, 2);
+
+    // Mystic flame (#992b45 Deep Wine, #d04648 Crimson Flame, #f4d06f Amber)
+    ctx.fillStyle = DEEPER_24[16];
+    ctx.fillRect(6, 2, 4, 3);
+    ctx.fillStyle = DEEPER_24[17];
+    ctx.fillRect(7, 1, 2, 3);
+    ctx.fillStyle = DEEPER_24[12];
+    ctx.fillRect(7, 2, 2, 1);
 
     canvas.refresh();
   }
@@ -553,6 +652,44 @@ export class DungeonRenderer {
       }
     }
 
+    // Update chest lighting
+    for (const img of this.chestImages.values()) {
+      const x = Math.floor(img.x / TILE_SIZE);
+      const y = Math.floor(img.y / TILE_SIZE);
+      const idx = toIndex(x, y, this.floor.width);
+
+      if (fog.visible[idx]) {
+        img.setVisible(true);
+        img.setAlpha(1.0);
+        img.clearTint();
+      } else if (fog.explored[idx]) {
+        img.setVisible(true);
+        img.setAlpha(0.35);
+        img.setTint(memoryTint);
+      } else {
+        img.setVisible(false);
+      }
+    }
+
+    // Update bargain pedestal lighting
+    if (this.pedestalImage) {
+      const x = Math.floor(this.pedestalImage.x / TILE_SIZE);
+      const y = Math.floor(this.pedestalImage.y / TILE_SIZE);
+      const idx = toIndex(x, y, this.floor.width);
+
+      if (fog.visible[idx]) {
+        this.pedestalImage.setVisible(true);
+        this.pedestalImage.setAlpha(1.0);
+        this.pedestalImage.clearTint();
+      } else if (fog.explored[idx]) {
+        this.pedestalImage.setVisible(true);
+        this.pedestalImage.setAlpha(0.35);
+        this.pedestalImage.setTint(memoryTint);
+      } else {
+        this.pedestalImage.setVisible(false);
+      }
+    }
+
     // Update monster lighting (monsters only visible when lit)
     for (const [id, img] of this.monsterImages.entries()) {
       const x = Math.floor(img.x / TILE_SIZE);
@@ -655,6 +792,87 @@ export class DungeonRenderer {
         img.destroy();
         this.flaskImages.delete(id);
       }
+    }
+  }
+
+  /**
+   * Synchronizes chest sprites (normal and cursed) with current active chests on the floor.
+   */
+  public syncChests(chests: readonly Chest[], fog: FogOfWar): void {
+    const activeIds = new Set<string>();
+    const memoryTint = hexToNumber(PALETTE.panelBorder);
+
+    for (const chest of chests) {
+      if (chest.isOpen) continue;
+      activeIds.add(chest.id);
+      let img = this.chestImages.get(chest.id);
+
+      const textureKey = chest.isCursed ? 'tile_cursed_chest' : 'tile_chest';
+
+      if (!img) {
+        img = this.scene.add.image(chest.x * TILE_SIZE, chest.y * TILE_SIZE, textureKey);
+        img.setOrigin(0, 0);
+        img.setDepth(5);
+        this.chestImages.set(chest.id, img);
+      } else if (img.texture.key !== textureKey) {
+        img.setTexture(textureKey);
+      }
+
+      const idx = toIndex(chest.x, chest.y, this.floor.width);
+      if (fog.visible[idx]) {
+        img.setVisible(true);
+        img.setAlpha(1.0);
+        img.clearTint();
+      } else if (fog.explored[idx]) {
+        img.setVisible(true);
+        img.setAlpha(0.35);
+        img.setTint(memoryTint);
+      } else {
+        img.setVisible(false);
+      }
+    }
+
+    for (const [id, img] of this.chestImages.entries()) {
+      if (!activeIds.has(id)) {
+        img.destroy();
+        this.chestImages.delete(id);
+      }
+    }
+  }
+
+  /**
+   * Synchronizes devil's bargain pedestal on even floors.
+   */
+  public syncBargainPedestal(pedestal: BargainPedestal | null | undefined, fog: FogOfWar): void {
+    const memoryTint = hexToNumber(PALETTE.panelBorder);
+
+    if (!pedestal || pedestal.isUsed) {
+      if (this.pedestalImage) {
+        this.pedestalImage.destroy();
+        this.pedestalImage = null;
+      }
+      return;
+    }
+
+    if (!this.pedestalImage) {
+      this.pedestalImage = this.scene.add.image(pedestal.x * TILE_SIZE, pedestal.y * TILE_SIZE, 'tile_bargain_altar');
+      this.pedestalImage.setOrigin(0, 0);
+      this.pedestalImage.setDepth(5);
+    } else {
+      this.pedestalImage.setPosition(pedestal.x * TILE_SIZE, pedestal.y * TILE_SIZE);
+    }
+
+    const idx = toIndex(pedestal.x, pedestal.y, this.floor.width);
+    if (fog.visible[idx]) {
+      this.pedestalImage.setVisible(true);
+      this.pedestalImage.setAlpha(1.0);
+      this.pedestalImage.clearTint();
+    } else if (fog.explored[idx]) {
+      this.pedestalImage.setVisible(true);
+      this.pedestalImage.setAlpha(0.35);
+      this.pedestalImage.setTint(memoryTint);
+    } else {
+      this.pedestalImage.setVisible(false);
     }
   }
 
@@ -768,6 +986,14 @@ export class DungeonRenderer {
       img.destroy();
     }
     this.flaskImages.clear();
+    for (const img of this.chestImages.values()) {
+      img.destroy();
+    }
+    this.chestImages.clear();
+    if (this.pedestalImage) {
+      this.pedestalImage.destroy();
+      this.pedestalImage = null;
+    }
     for (const img of this.monsterImages.values()) {
       img.destroy();
     }
