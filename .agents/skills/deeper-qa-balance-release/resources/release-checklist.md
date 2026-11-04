@@ -14,3 +14,4 @@ Read this prior to closing Milestone M11 or packaging a public release.
 - [ ] Photosensitivity and screen shake settings correctly disable high-frequency animations.
 - [ ] `CREDITS.md` accounts for all licenses and author attributions.
 - [ ] Standalone HTML5 package tested locally via `npm run preview`.
+

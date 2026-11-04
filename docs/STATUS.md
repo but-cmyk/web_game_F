@@ -24,3 +24,4 @@ None at present.
 
 ## Handoff notes for the next conversation
 Base Agent Kit initialization in progress on branch `chore/agent-kit`.
+

@@ -11,3 +11,4 @@ Read this checklist prior to committing any economy or loot changes.
 - [ ] Is the mixed policy death rate maintained within the 55-65% target window?
 - [ ] Is there an absence of any dominant strategy yielding > 1.5x expected gold?
 - [ ] Have you logged all changes in `docs/BALANCE_LOG.md`?
+

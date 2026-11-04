@@ -19,3 +19,4 @@ Read this when drafting or reviewing copy for the Mirror screen, run summary, or
 ## Starter Banned Words
 The following words must never appear in Mirror copy (enforced by tests):
 `greedy`, `coward`, `crazy`, `insane`, `neurotic`, `stupid`, `pathology`, `disorder`, `ngu ngốc`, `hèn nhát`, `bệnh hoạn`, `tham lam`, `điên rồ`.
+

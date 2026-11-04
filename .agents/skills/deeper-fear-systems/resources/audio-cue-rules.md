@@ -13,3 +13,4 @@ Read this when connecting audio events to rendering in `src/audio/` and `src/vie
 ## Sensory Rules
 - Color alone is never the only signal (pair color tint with shape/icon pulses).
 - When `reduceFlashing` is enabled in Settings, clamp pulse opacity to <= 15% without abrupt jumps.
+

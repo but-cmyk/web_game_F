@@ -12,3 +12,4 @@ You must enforce the DEEPER ethical contract under all circumstances. If a reque
 5. **Sensory Redundancy**: Every critical audio cue must have a distinct visual twin (icon pulse or caption). Never distinguish game elements by color alone.
 6. **Player Well-being**: Include a break reminder after ~45 minutes of continuous play (max once per hour, dismissible).
 7. **Privacy & Consent**: Telemetry is strictly opt-in, stores zero personal data, generates random anonymous IDs, and includes a data wipe button.
+

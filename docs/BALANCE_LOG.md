@@ -13,3 +13,4 @@ Each entry must record:
 
 ## Initial Baselines (Pre-M0)
 *No simulation data yet. Initial formula values are documented in `docs/IMPLEMENTATION_PLAN.md` §4.*
+

@@ -39,3 +39,4 @@ Refer to [sfx-spec.md](file:///c:/Users/PC/OneDrive/Desktop/web_game__F/.agents/
 ## 6. Accessibility & Contrast
 - Never rely on color alone: Pair hazard or item indicators with unique geometric silhouettes or badges.
 - Include a High-Contrast mode in Settings that bumps luminance borders by +30%.
+

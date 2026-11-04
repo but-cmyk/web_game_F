@@ -92,3 +92,4 @@ This document audits the triggering precision of each skill in the DEEPER agent 
   1. "Draft the copy for the Gold Digger archetype" (Route to mirror telemetry)
   2. "Add a second sound effect when picking up gold" (Route to pixel audio pipeline)
 - **Self-Check**: Comprehensive coverage of testing, balance simulation, performance profiling, and release packaging.
+

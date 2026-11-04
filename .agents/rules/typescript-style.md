@@ -13,3 +13,4 @@ Follow these standards across all TypeScript code in DEEPER:
 5. **Localization Mandatory**: Never hard-code player-facing strings in UI/scenes. Reference localization keys via `src/i18n/vi.json` and `en.json`.
 6. **Error Handling**: Use typed custom errors. Never write empty catch blocks (`catch (e) {}`); handle or propagate with clear context.
 7. **Intentional Comments**: Write comments explaining *why* a design choice exists, not *what* the code visibly does.
+

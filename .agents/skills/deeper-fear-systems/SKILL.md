@@ -38,3 +38,4 @@ Refer to [audio-cue-rules.md](file:///c:/Users/PC/OneDrive/Desktop/web_game__F/.
 
 ## 6. Tuning Discipline
 Tune fear numbers in `src/data/enemies.json` and `src/data/biomes.json`. Never alter locked formulas in `docs/IMPLEMENTATION_PLAN.md` §4 without owner approval and log entry.
+

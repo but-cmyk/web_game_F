@@ -52,3 +52,4 @@ Refer to [mapgen-notes.md](file:///c:/Users/PC/OneDrive/Desktop/web_game__F/.age
 - When interacting with Phaser APIs, inspect `node_modules/phaser/types/phaser.d.ts`.
 - Never guess method signatures or properties; use documented Phaser 3 patterns.
 - Map touch/swipe gestures directly to grid direction events.
+

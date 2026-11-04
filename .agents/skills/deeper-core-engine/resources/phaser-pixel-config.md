@@ -29,3 +29,4 @@ export const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
 - **320x180**: 16:9 native pixel resolution (exact 1/4 of 1280x720, 1/6 of 1920x1080) ensuring clean integer upscaling without subpixel artifacts.
 - **`roundPixels: true`**: Prevents shimmering during camera panning.
 - **HUD allocation**: 20px top banner, reserving 320x160 (20x10 tiles) for the playable dungeon view.
+

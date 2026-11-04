@@ -40,3 +40,4 @@ Refer to [copy-guide.md](file:///c:/Users/PC/OneDrive/Desktop/web_game__F/.agent
 ## 6. Privacy & Telemetry
 - Interface: Abstract reporting behind `Analytics` interface defaulting to `NoopAnalytics`.
 - Consent Screen: Explicit opt-in prompt with random UUID and immediate data purge option.
+

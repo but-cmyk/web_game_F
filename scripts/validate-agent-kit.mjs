@@ -77,3 +77,4 @@ for (const w of warnings) console.warn('WARN  ' + w);
 for (const e of errors) console.error('ERROR ' + e);
 console.log(errors.length ? `\nFAILED: ${errors.length} error(s)` : '\nOK: agent kit is valid');
 process.exit(errors.length ? 1 : 0);
+

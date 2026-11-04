@@ -37,3 +37,4 @@ Refer to [balance-sim-contract.md](file:///c:/Users/PC/OneDrive/Desktop/web_game
 Refer to [release-checklist.md](file:///c:/Users/PC/OneDrive/Desktop/web_game__F/.agents/skills/deeper-qa-balance-release/resources/release-checklist.md):
 - Command: `npm run package` outputs a standalone, offline-capable HTML5 zip package suitable for itch.io and web distribution.
 - **Never Weaken Quality Gates**: If a balance target or unit test fails, report the actual numbers honestly. Never soften assertions or modify criteria to force a green result.
+

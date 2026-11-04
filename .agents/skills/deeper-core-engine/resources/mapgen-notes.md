@@ -24,3 +24,4 @@ for (let seed = 1; seed <= 100; seed++) {
 }
 ```
 All walkable floor tiles must belong to a single connected component.
+

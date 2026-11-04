@@ -16,3 +16,4 @@ Read this when implementing synthesized sound routines in `src/audio/sfx.ts`.
 | 10 | `sfx_extract_station`| Sine chord | 330, 440, 550 Hz | A: 50ms, D: 400ms, R: 200ms | Exit approached | Golden ray beam |
 | 11 | `sfx_rope_use` | Triangle | 250 -> 500 Hz | A: 30ms, D: 250ms, R: 80ms | Rope escape | Ascending arrow |
 | 12 | `sfx_menu_select` | Sine | 440 -> 880 Hz | A: 2ms, D: 40ms, R: 20ms | Button pressed | Inverted button border |
+

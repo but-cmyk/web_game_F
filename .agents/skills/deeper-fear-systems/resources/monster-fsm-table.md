@@ -14,3 +14,4 @@ Read this when implementing or testing monster AI transitions.
 
 ## Unit Test Invariant
 Every row in this table must be asserted by a deterministic unit test with zero flaky behavior.
+

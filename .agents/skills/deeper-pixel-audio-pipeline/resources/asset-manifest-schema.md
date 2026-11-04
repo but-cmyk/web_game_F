@@ -32,3 +32,4 @@ When external pixel art replaces procedural placeholders:
 1. Maintain identical `key` names.
 2. Maintain exact 16x16 pixel dimensions.
 3. Record artist credit and license grant in `CREDITS.md`.
+

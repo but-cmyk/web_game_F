@@ -17,3 +17,4 @@ Each entry must include:
 - **Rationale**: Mitigate Flash model failure modes (hallucinated APIs, speculative fixes, unreadable low-res UI) while enforcing strict isolation of core logic from Phaser.
 - **Alternatives considered**: Single monolithic prompt (rejected due to context bloat and reduced adherence).
 - **Approved by**: Pre-approved in `docs/IMPLEMENTATION_PLAN.md` §6.
+

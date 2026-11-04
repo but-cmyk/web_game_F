@@ -60,3 +60,4 @@ Immediately stop and ask the owner when encountering:
 ## Context Hygiene & Resumption
 - When session context approaches ~60%, write handoff notes into `docs/STATUS.md` and request a new conversation.
 - When resuming an interrupted milestone, inspect `git log` and `docs/STATUS.md`, verify green tests, and continue from the latest green commit.
+

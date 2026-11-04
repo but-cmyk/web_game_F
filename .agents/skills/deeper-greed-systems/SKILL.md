@@ -37,3 +37,4 @@ Refer to [economy-checklist.md](file:///c:/Users/PC/OneDrive/Desktop/web_game__F
 ## 6. Dopamine Feedback Boundaries
 - Allowed: Melodic pentatonic pitch increments on consecutive gold pickups (capped at 5 steps).
 - Forbidden: Fake "near-miss" slot animations, deceptive loss-framed streaks, or artificially biased coin flips.
+

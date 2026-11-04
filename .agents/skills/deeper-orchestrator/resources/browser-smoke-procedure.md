@@ -19,3 +19,4 @@ Read this resource during Phase 3 verification of each milestone.
    - Capture a viewport screenshot and embed it into the milestone walkthrough artifact.
 7. **Clean Teardown**:
    - Terminate the background server process.
+

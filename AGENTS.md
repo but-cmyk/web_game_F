@@ -42,3 +42,4 @@ tests/         deterministic unit and integration tests
 | `deeper-mirror-telemetry` | Mirror screen, greed/fear metrics, archetype cards, neutral copy, privacy |
 | `deeper-pixel-audio-pipeline` | DEEPER-24 palette, procedural visual placeholders, WebAudio SFX synthesis |
 | `deeper-qa-balance-release` | Vitest testing, balance simulation, performance profiling, packaging |
+
