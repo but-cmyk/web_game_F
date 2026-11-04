@@ -25,7 +25,14 @@ export const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
   scene: [BootScene, RunScene],
 };
 
+declare global {
+  interface Window {
+    __PHASER_GAME__?: Phaser.Game;
+  }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
-  new Phaser.Game(GAME_CONFIG);
+  const game = new Phaser.Game(GAME_CONFIG);
+  window.__PHASER_GAME__ = game;
 });
 
