@@ -1,11 +1,11 @@
 # DEEPER — Status
-Last updated: 2026-11-04 · Current milestone: M0
+Last updated: 2026-11-04 · Current milestone: M2
 
 | Milestone | State (todo/doing/review/done) | Branch | Notes |
 |---|---|---|---|
 | M0 | done | milestone/M0 | Bootstrap complete, canvas 320x180, palette DEEPER-24 |
 | M1 | done | milestone/M1 | Engine foundations, Rng, Grid, SaveStore, Data loaders |
-| M2 | doing | milestone/M2 | Dungeon generation & grid movement |
+| M2 | review | milestone/M2 | Procedural BSP dungeon, turn resolution, FOV, Fog of War, RunScene |
 | M3 | todo | milestone/M3 | Single run loop, extraction, banking |
 | M4 | todo | milestone/M4 | Fear I: Oil, Dread, AudioDirector |
 | M5 | todo | milestone/M5 | Fear II: Monsters FSM & Hallucinations |
@@ -23,5 +23,5 @@ None at present.
 None at present.
 
 ## Handoff notes for the next conversation
-Base Agent Kit initialization in progress on branch `chore/agent-kit`.
+Milestone M2 implementation and verification complete on branch `milestone/M2`. Ready for code review and merge to master, followed by Milestone M3.
 
