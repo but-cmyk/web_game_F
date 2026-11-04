@@ -4,8 +4,8 @@ Last updated: 2026-11-04 · Current milestone: M0
 | Milestone | State (todo/doing/review/done) | Branch | Notes |
 |---|---|---|---|
 | M0 | done | milestone/M0 | Bootstrap complete, canvas 320x180, palette DEEPER-24 |
-| M1 | review | milestone/M1 | Engine foundations complete, 38/38 unit tests green, mechanical review 0 errors |
-| M2 | todo | milestone/M2 | Dungeon generation & grid movement |
+| M1 | done | milestone/M1 | Engine foundations, Rng, Grid, SaveStore, Data loaders |
+| M2 | doing | milestone/M2 | Dungeon generation & grid movement |
 | M3 | todo | milestone/M3 | Single run loop, extraction, banking |
 | M4 | todo | milestone/M4 | Fear I: Oil, Dread, AudioDirector |
 | M5 | todo | milestone/M5 | Fear II: Monsters FSM & Hallucinations |
