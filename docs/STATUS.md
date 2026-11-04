@@ -3,7 +3,7 @@ Last updated: 2026-11-04 · Current milestone: M0
 
 | Milestone | State (todo/doing/review/done) | Branch | Notes |
 |---|---|---|---|
-| M0 | doing | milestone/M0 | Project bootstrap & Phaser 3 canvas setup |
+| M0 | review | milestone/M0 | Bootstrap complete, check green, walkthrough ready |
 | M1 | todo | milestone/M1 | Engine foundations, Rng, Grid, SaveStore |
 | M2 | todo | milestone/M2 | Dungeon generation & grid movement |
 | M3 | todo | milestone/M3 | Single run loop, extraction, banking |
