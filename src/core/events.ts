@@ -31,6 +31,33 @@ export interface MonsterStateChangedEvent {
   readonly newState: string;
 }
 
+export interface MonsterAlertedEvent {
+  readonly monsterId: string;
+  readonly type: string;
+  readonly state: string;
+  readonly x: number;
+  readonly y: number;
+}
+
+export interface MonsterAttackedEvent {
+  readonly monsterId: string;
+  readonly damage: number;
+  readonly remainingHp: number;
+}
+
+export interface HallucinationTriggeredEvent {
+  readonly id: string;
+  readonly type: string;
+  readonly x: number;
+  readonly y: number;
+}
+
+export interface HallucinationEvaporatedEvent {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+}
+
 export interface GoldPickedEvent {
   readonly amount: number;
   readonly totalCarried: number;
@@ -79,6 +106,10 @@ export interface GameEventMap {
   NoiseEmitted: NoiseEmittedEvent;
   DreadChanged: DreadChangedEvent;
   MonsterStateChanged: MonsterStateChangedEvent;
+  MonsterAlerted: MonsterAlertedEvent;
+  MonsterAttacked: MonsterAttackedEvent;
+  HallucinationTriggered: HallucinationTriggeredEvent;
+  HallucinationEvaporated: HallucinationEvaporatedEvent;
   GoldPicked: GoldPickedEvent;
   OilPicked: OilPickedEvent;
   ChestOpened: ChestOpenedEvent;

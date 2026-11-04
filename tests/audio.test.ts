@@ -58,5 +58,15 @@ describe('AudioDirector & Procedural WebAudio Mechanics', () => {
       director.setMuted(false);
       expect(director.isMuted()).toBe(false);
     });
+
+    it('gracefully handles monster audio cues without active AudioContext in node', () => {
+      const director = new AudioDirector();
+      expect(() => director.playMonsterAlert('CHASE')).not.toThrow();
+      expect(() => director.playMonsterAlert('SUSPICIOUS')).not.toThrow();
+      expect(() => director.playListenerHowl()).not.toThrow();
+      expect(() => director.playPlayerHurt()).not.toThrow();
+      expect(() => director.playHallucinationEvaporation()).not.toThrow();
+      expect(() => director.silenceAmbient()).not.toThrow();
+    });
   });
 });

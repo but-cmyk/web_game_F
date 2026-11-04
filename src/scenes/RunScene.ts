@@ -12,6 +12,7 @@ import { TurnResolver, DungeonState, PlayerAction, MovementMode } from '../core/
 import { FogOfWar, createFogOfWar, updateFogOfWar, computeFOV } from '../core/fov';
 import { toIndex } from '../core/grid';
 import { spawnGoldPiles, spawnOilFlasks } from '../core/loot';
+import { spawnMonsters } from '../core/monsters';
 import { calculateLightRadius } from '../core/fear';
 import { DungeonRenderer, TILE_SIZE } from '../views/DungeonRenderer';
 import { PostFX } from '../views/PostFX';
@@ -62,6 +63,7 @@ export class RunScene extends Phaser.Scene {
     this.floor = generateDungeon(this.rng, depth);
     const goldPiles = spawnGoldPiles(this.floor, depth, this.rng);
     const oilFlasks = spawnOilFlasks(this.floor, depth, this.rng);
+    const monsters = spawnMonsters(this.floor, depth, this.rng);
     this.eventBus = new EventBus();
 
     this.state = {
@@ -78,9 +80,14 @@ export class RunScene extends Phaser.Scene {
       dread: 0,
       goldPiles,
       oilFlasks,
+      monsters,
+      hallucinations: [],
+      playerInvulnerableTurns: 0,
+      playerHistory: [{ ...this.floor.entrance }],
       isExtracted: false,
       isDead: false,
       eventBus: this.eventBus,
+      rng: this.rng,
     };
 
     this.fog = createFogOfWar(this.floor.width, this.floor.height);
@@ -100,6 +107,8 @@ export class RunScene extends Phaser.Scene {
     this.recomputeFOV();
     this.dungeonRenderer.syncGoldPiles(this.state.goldPiles, this.fog);
     this.dungeonRenderer.syncOilFlasks(this.state.oilFlasks, this.fog);
+    this.dungeonRenderer.syncMonsters(this.state.monsters ?? [], this.fog);
+    this.dungeonRenderer.syncHallucinations(this.state.hallucinations ?? [], this.fog);
 
     // Setup presentation, HUD, controls, and audio listeners
     this.setupCamera();
@@ -158,6 +167,37 @@ export class RunScene extends Phaser.Scene {
       if (payload.newDread >= 70 && payload.newDread > payload.oldDread) {
         this.postFX.triggerHeartbeatPulse();
       }
+    });
+
+    this.eventBus.on('MonsterStateChanged', (payload) => {
+      if (payload.newState === 'CHASE' || payload.newState === 'SUSPICIOUS') {
+        defaultAudioDirector.playMonsterAlert(payload.newState);
+      } else if (payload.newState === 'HOWL') {
+        defaultAudioDirector.playListenerHowl();
+      }
+    });
+
+    this.eventBus.on('MonsterAlerted', (payload) => {
+      defaultAudioDirector.playMonsterAlert(payload.state);
+    });
+
+    this.eventBus.on('MonsterAttacked', () => {
+      defaultAudioDirector.playPlayerHurt();
+      const reduceMotion = defaultSaveStore.load().reduceMotion;
+      if (!reduceMotion) {
+        this.cameras.main.shake(120, 0.008);
+      }
+      this.tweens.add({
+        targets: this.playerSprite,
+        alpha: 0.2,
+        duration: 60,
+        yoyo: true,
+        repeat: 1,
+      });
+    });
+
+    this.eventBus.on('HallucinationEvaporated', () => {
+      defaultAudioDirector.playHallucinationEvaporation();
     });
 
     this.eventBus.on('RunEnded', (payload) => {
@@ -319,6 +359,12 @@ export class RunScene extends Phaser.Scene {
     this.modeText.setText(t('hud.mode', { mode: t(modeKey) }).toUpperCase());
     this.goldText.setText(t('hud.carried_gold', { gold: this.state.carriedGold }).toUpperCase());
     this.depthText.setText(t('hud.depth', { depth: this.state.depth }).toUpperCase());
+
+    if ((this.state.playerInvulnerableTurns ?? 0) > 0) {
+      this.playerSprite.setAlpha(0.65);
+    } else {
+      this.playerSprite.setAlpha(1.0);
+    }
   }
 
   private setupInput(): void {
@@ -434,6 +480,8 @@ export class RunScene extends Phaser.Scene {
       this.recomputeFOV();
       this.dungeonRenderer.syncGoldPiles(this.state.goldPiles, this.fog);
       this.dungeonRenderer.syncOilFlasks(this.state.oilFlasks, this.fog);
+      this.dungeonRenderer.syncMonsters(this.state.monsters ?? [], this.fog);
+      this.dungeonRenderer.syncHallucinations(this.state.hallucinations ?? [], this.fog);
     }
     this.updateHUD();
   }
@@ -444,8 +492,11 @@ export class RunScene extends Phaser.Scene {
     this.floor = generateDungeon(this.rng, this.state.depth);
     this.state.floor = this.floor;
     this.state.playerPos = { ...this.floor.entrance };
+    this.state.playerHistory = [{ ...this.floor.entrance }];
     this.state.goldPiles = spawnGoldPiles(this.floor, this.state.depth, this.rng);
     this.state.oilFlasks = spawnOilFlasks(this.floor, this.state.depth, this.rng);
+    this.state.monsters = spawnMonsters(this.floor, this.state.depth, this.rng);
+    this.state.hallucinations = [];
 
     this.fog = createFogOfWar(this.floor.width, this.floor.height);
     this.dungeonRenderer.destroy();
@@ -459,6 +510,8 @@ export class RunScene extends Phaser.Scene {
     this.recomputeFOV();
     this.dungeonRenderer.syncGoldPiles(this.state.goldPiles, this.fog);
     this.dungeonRenderer.syncOilFlasks(this.state.oilFlasks, this.fog);
+    this.dungeonRenderer.syncMonsters(this.state.monsters ?? [], this.fog);
+    this.dungeonRenderer.syncHallucinations(this.state.hallucinations ?? [], this.fog);
     this.updateHUD();
   }
 

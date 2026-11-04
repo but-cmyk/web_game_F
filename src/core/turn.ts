@@ -11,6 +11,20 @@ import { DungeonFloor } from './mapgen';
 import { EventBus } from './events';
 import { GoldPile, pickupGold, OilFlask, pickupOilFlask } from './loot';
 import { oilCostPerStep, calculateNoiseRadius, updateDread } from './fear';
+import {
+  Monster,
+  NoiseEventInfo,
+  updateMonsterFSM,
+  calculateDangerP,
+  resolveMonsterCollisions,
+} from './monsters';
+import {
+  Hallucination,
+  shouldSpawnHallucination,
+  spawnHallucination,
+  updateHallucinations,
+} from './hallucinations';
+import { Rng } from './rng';
 
 export type MovementMode = 'sneak' | 'walk' | 'run';
 
@@ -41,9 +55,14 @@ export interface DungeonState {
   dread: number;
   goldPiles: GoldPile[];
   oilFlasks: OilFlask[];
+  monsters?: Monster[];
+  hallucinations?: Hallucination[];
+  playerInvulnerableTurns?: number;
+  playerHistory?: Coord[];
   isExtracted: boolean;
   isDead: boolean;
   eventBus: EventBus;
+  rng?: Rng;
 }
 
 function getDelta(direction: Direction): Coord {
@@ -77,6 +96,8 @@ export class TurnResolver {
 
       case 'WAIT': {
         state.turnCount += 1;
+        const postRes = TurnResolver.processPostPlayerTurn(state, []);
+        if (postRes.runEnded) return postRes;
         return { consumedTurn: true };
       }
 
@@ -210,9 +231,128 @@ export class TurnResolver {
           oilCost,
         });
 
+        // 8. Post-turn processing (monsters, hallucinations, collisions)
+        const noiseInfo: NoiseEventInfo = {
+          x: targetX,
+          y: targetY,
+          radius: noiseRadius,
+          source: 'player',
+        };
+        const postRes = TurnResolver.processPostPlayerTurn(state, [noiseInfo]);
+        if (postRes.runEnded) return postRes;
+
         return { consumedTurn: true };
       }
     }
+  }
+
+  /**
+   * Processes monster AI turns, disturbance checks, hallucinations, and combat collisions.
+   */
+  private static processPostPlayerTurn(
+    state: DungeonState,
+    noiseEvents: readonly NoiseEventInfo[]
+  ): TurnResult {
+    // 1. Maintain player breadcrumb history (for Stalker tracking)
+    if (!state.playerHistory) {
+      state.playerHistory = [];
+    }
+    state.playerHistory.unshift({ ...state.playerPos });
+    if (state.playerHistory.length > 12) {
+      state.playerHistory.pop();
+    }
+
+    // 2. Disturbance check
+    if (state.rng && state.monsters && state.monsters.length > 0) {
+      const danger = calculateDangerP(state.depth, state.dread);
+      if (state.rng.next() <= danger) {
+        const eligible = state.monsters.filter(
+          (m) => m.state !== 'CHASE' && m.type !== 'listener'
+        );
+        if (eligible.length > 0) {
+          const picked = eligible[state.rng.nextInt(0, eligible.length - 1)];
+          picked.state = 'SUSPICIOUS';
+          picked.targetCoord = { ...state.playerPos };
+          state.eventBus.emit('MonsterAlerted', {
+            monsterId: picked.id,
+            type: picked.type,
+            state: 'SUSPICIOUS',
+            x: picked.x,
+            y: picked.y,
+          });
+        }
+      }
+    }
+
+    // 3. Update Monster FSMs & movement
+    if (state.monsters && state.monsters.length > 0) {
+      for (const monster of state.monsters) {
+        updateMonsterFSM(
+          monster,
+          state.floor,
+          state.playerPos,
+          noiseEvents,
+          state.playerHistory,
+          state.eventBus,
+          state.monsters,
+          state.rng
+        );
+      }
+    }
+
+    // 4. Hallucinations spawn & lifecycle
+    if (!state.hallucinations) {
+      state.hallucinations = [];
+    }
+    if (state.rng && shouldSpawnHallucination(state.dread, state.turnCount, state.rng)) {
+      const h = spawnHallucination(state.floor, state.playerPos, state.rng, state.turnCount);
+      if (h) {
+        state.hallucinations.push(h);
+        state.eventBus.emit('HallucinationTriggered', {
+          id: h.id,
+          type: h.type,
+          x: h.x,
+          y: h.y,
+        });
+      }
+    }
+
+    const halRes = updateHallucinations(
+      state.hallucinations,
+      state.playerPos,
+      state.dread,
+      state.hp,
+      state.eventBus
+    );
+    state.hallucinations = halRes.remainingHallucinations;
+    state.dread = halRes.newDread;
+
+    // 5. Combat Collisions & Invulnerability
+    if (state.monsters && state.monsters.length > 0) {
+      const collRes = resolveMonsterCollisions(
+        state.monsters,
+        state.playerPos,
+        state.hp,
+        state.playerInvulnerableTurns ?? 0,
+        state.eventBus
+      );
+      state.hp = collRes.playerHp;
+      state.playerInvulnerableTurns = collRes.playerInvulnerableTurns;
+
+      if (collRes.hitOccurred && collRes.attackingMonster) {
+        state.eventBus.emit('MonsterAttacked', {
+          monsterId: collRes.attackingMonster.id,
+          damage: collRes.attackingMonster.damage,
+          remainingHp: state.hp,
+        });
+      }
+
+      if (TurnResolver.checkDeath(state)) {
+        return { consumedTurn: true, runEnded: 'died' };
+      }
+    }
+
+    return { consumedTurn: true };
   }
 
   /**

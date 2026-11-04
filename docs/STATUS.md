@@ -1,5 +1,5 @@
 # DEEPER — Status
-Last updated: 2026-11-04 · Current milestone: M4
+Last updated: 2026-11-04 · Current milestone: M5
 
 | Milestone | State (todo/doing/review/done) | Branch | Notes |
 |---|---|---|---|
@@ -8,7 +8,7 @@ Last updated: 2026-11-04 · Current milestone: M4
 | M2 | done | milestone/M2 | Procedural BSP dungeon, turn resolution, FOV, Fog of War, RunScene |
 | M3 | done | milestone/M3 | Single run loop, gold collection, extraction, banking, Menu/Summary scenes |
 | M4 | done | milestone/M4 | Fear I: Oil, Dread, AudioDirector, PostFX, noise rings |
-| M5 | todo | milestone/M5 | Fear II: Monsters FSM & Hallucinations |
+| M5 | done | milestone/M5 | Fear II: Monsters FSM & Hallucinations |
 | M6 | todo | milestone/M6 | Greed I: Loot curves, Curses, Bargains, Codex |
 | M7 | todo | milestone/M7 | Greed II: Shop, Meta upgrades, Balance sim |
 | M8 | todo | milestone/M8 | Mirror screen & Tutorial |
@@ -23,5 +23,5 @@ None at present.
 None at present.
 
 ## Handoff notes for the next conversation
-Milestone M4 implemented and verified on branch `milestone/M4`. All 78 unit/integration tests green, mechanical review 0 errors, browser smoke test verified oil depletion, Dread progression, heartbeat audio & PostFX. Ready for merge to `master` and transition to M5 (Fear II: Monsters FSM & Hallucinations).
+Milestone M5 implemented and verified on branch `milestone/M5`. All 100 unit/integration tests green, mechanical review 0 errors, browser smoke test verified monster FSMs (Crawler, Listener, Stalker), combat collisions, stun/invulnerability, and hallucinations. Ready for merge to `master` and transition to M6 (Greed I: Loot curves, Curses, Bargains, Codex).
 

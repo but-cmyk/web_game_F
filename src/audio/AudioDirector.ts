@@ -304,6 +304,159 @@ export class AudioDirector {
     }
   }
 
+  /**
+   * Silences ambient drone temporarily ("Silence before threat").
+   */
+  public silenceAmbient(durationMs = 800): void {
+    if (!this.ctx || !this.ambientGain) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      this.ambientGain.gain.cancelScheduledValues(now);
+      this.ambientGain.gain.setValueAtTime(0, now);
+      this.ambientGain.gain.setValueAtTime(0, now + durationMs / 1000);
+      this.ambientGain.gain.linearRampToValueAtTime(0.3, now + (durationMs + 400) / 1000);
+    } catch (_err) {
+      void _err;
+    }
+  }
+
+  /**
+   * Procedural monster alert cue with "Silence before threat" for CHASE.
+   */
+  public playMonsterAlert(state: string): void {
+    if (!this.ctx || !this.sfxGain || this.muted) return;
+
+    try {
+      const now = this.ctx.currentTime;
+
+      if (state === 'CHASE') {
+        this.silenceAmbient(800);
+
+        // Discordant low threat screech
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(160, now + 0.1);
+        osc.frequency.exponentialRampToValueAtTime(75, now + 0.35);
+
+        gain.gain.setValueAtTime(0.25, now + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+
+        osc.start(now + 0.1);
+        osc.stop(now + 0.36);
+      } else {
+        // Subtle eerie rustle
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(190, now);
+        osc.frequency.exponentialRampToValueAtTime(110, now + 0.18);
+
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+
+        osc.start(now);
+        osc.stop(now + 0.19);
+      }
+    } catch (_err) {
+      void _err;
+    }
+  }
+
+  /**
+   * Resonant subterranean howl of the Listener idol.
+   */
+  public playListenerHowl(): void {
+    if (!this.ctx || !this.sfxGain || this.muted) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.exponentialRampToValueAtTime(520, now + 0.35);
+      osc.frequency.exponentialRampToValueAtTime(310, now + 0.7);
+
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+
+      osc.start(now);
+      osc.stop(now + 0.72);
+    } catch (_err) {
+      void _err;
+    }
+  }
+
+  /**
+   * Heavy crunch/impact upon player taking damage.
+   */
+  public playPlayerHurt(): void {
+    if (!this.ctx || !this.sfxGain || this.muted) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(110, now);
+      osc.frequency.exponentialRampToValueAtTime(35, now + 0.18);
+
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+
+      osc.start(now);
+      osc.stop(now + 0.22);
+    } catch (_err) {
+      void _err;
+    }
+  }
+
+  /**
+   * Ethereal whisper / dissipation of a vanishing hallucination.
+   */
+  public playHallucinationEvaporation(): void {
+    if (!this.ctx || !this.sfxGain || this.muted) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(580, now);
+      osc.frequency.exponentialRampToValueAtTime(190, now + 0.25);
+
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+
+      osc.start(now);
+      osc.stop(now + 0.27);
+    } catch (_err) {
+      void _err;
+    }
+  }
+
   public destroy(): void {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);

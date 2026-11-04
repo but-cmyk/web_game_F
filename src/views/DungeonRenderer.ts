@@ -10,6 +10,8 @@ import { DungeonFloor, TileType } from '../core/mapgen';
 import { FogOfWar } from '../core/fov';
 import { toIndex } from '../core/grid';
 import { GoldPile, OilFlask } from '../core/loot';
+import { Monster } from '../core/monsters';
+import { Hallucination } from '../core/hallucinations';
 import { DEEPER_24, PALETTE, hexToNumber } from '../utils/palette';
 
 export const TILE_SIZE = 16;
@@ -20,6 +22,9 @@ export class DungeonRenderer {
   private tileImages: Phaser.GameObjects.Image[] = [];
   private goldImages: Map<string, Phaser.GameObjects.Image> = new Map();
   private flaskImages: Map<string, Phaser.GameObjects.Image> = new Map();
+  private monsterImages: Map<string, Phaser.GameObjects.Image> = new Map();
+  private monsterOverheads: Map<string, Phaser.GameObjects.Image> = new Map();
+  private hallucinationImages: Map<string, Phaser.GameObjects.Image> = new Map();
   private playerSprite: Phaser.GameObjects.Image | null = null;
 
   constructor(scene: Phaser.Scene, floor: DungeonFloor) {
@@ -54,6 +59,21 @@ export class DungeonRenderer {
     }
     if (!this.scene.textures.exists('tile_oil_flask')) {
       this.generateOilFlaskTexture();
+    }
+    if (!this.scene.textures.exists('spr_crawler')) {
+      this.generateCrawlerTexture();
+    }
+    if (!this.scene.textures.exists('spr_listener')) {
+      this.generateListenerTexture();
+    }
+    if (!this.scene.textures.exists('spr_stalker')) {
+      this.generateStalkerTexture();
+    }
+    if (!this.scene.textures.exists('spr_phantom')) {
+      this.generatePhantomTexture();
+    }
+    if (!this.scene.textures.exists('icon_alert')) {
+      this.generateStatusIcons();
     }
     if (!this.scene.textures.exists('spr_player')) {
       this.generatePlayerTexture();
@@ -278,6 +298,126 @@ export class DungeonRenderer {
     canvas.refresh();
   }
 
+  private generateCrawlerTexture(): void {
+    const canvas = this.scene.textures.createCanvas('spr_crawler', TILE_SIZE, TILE_SIZE);
+    if (!canvas) return;
+    const ctx = canvas.context;
+    ctx.clearRect(0, 0, TILE_SIZE, TILE_SIZE);
+
+    // Spindly arachnid legs (#161311 Deep Shadow)
+    ctx.fillStyle = DEEPER_24[1];
+    ctx.fillRect(2, 4, 3, 1);
+    ctx.fillRect(1, 5, 2, 1);
+    ctx.fillRect(11, 4, 3, 1);
+    ctx.fillRect(13, 5, 2, 1);
+    ctx.fillRect(2, 11, 3, 1);
+    ctx.fillRect(1, 12, 2, 1);
+    ctx.fillRect(11, 11, 3, 1);
+    ctx.fillRect(13, 12, 2, 1);
+
+    // Carapace body (#635347 Weathered Rock & #352d27)
+    ctx.fillStyle = DEEPER_24[5];
+    ctx.fillRect(4, 5, 8, 6);
+    ctx.fillStyle = DEEPER_24[3];
+    ctx.fillRect(5, 6, 6, 4);
+
+    // Glowing predator eyes (PALETTE.danger #d90429)
+    ctx.fillStyle = hexToNumber(PALETTE.danger).toString(16).padStart(6, '0');
+    ctx.fillStyle = PALETTE.danger;
+    ctx.fillRect(5, 6, 2, 1);
+    ctx.fillRect(9, 6, 2, 1);
+
+    canvas.refresh();
+  }
+
+  private generateListenerTexture(): void {
+    const canvas = this.scene.textures.createCanvas('spr_listener', TILE_SIZE, TILE_SIZE);
+    if (!canvas) return;
+    const ctx = canvas.context;
+    ctx.clearRect(0, 0, TILE_SIZE, TILE_SIZE);
+
+    // Stationary stone base (#241e1a Dark Slate)
+    ctx.fillStyle = DEEPER_24[2];
+    ctx.fillRect(4, 8, 8, 7);
+    ctx.fillStyle = DEEPER_24[4];
+    ctx.fillRect(5, 9, 6, 5);
+
+    // Acoustic horn / ear funnel (#9e6b22 Tarnished Gold & #e09f3e Warm Amber)
+    ctx.fillStyle = DEEPER_24[10];
+    ctx.fillRect(3, 3, 10, 4);
+    ctx.fillStyle = DEEPER_24[11];
+    ctx.fillRect(5, 2, 6, 2);
+    ctx.fillRect(7, 1, 2, 1);
+
+    // Central listening eye / aperture (#0a0908 Void)
+    ctx.fillStyle = DEEPER_24[0];
+    ctx.fillRect(7, 4, 2, 2);
+
+    canvas.refresh();
+  }
+
+  private generateStalkerTexture(): void {
+    const canvas = this.scene.textures.createCanvas('spr_stalker', TILE_SIZE, TILE_SIZE);
+    if (!canvas) return;
+    const ctx = canvas.context;
+    ctx.clearRect(0, 0, TILE_SIZE, TILE_SIZE);
+
+    // Tall shadowy shroud (#161311 & #1a1429 Abyssal Trench)
+    ctx.fillStyle = DEEPER_24[20];
+    ctx.fillRect(4, 2, 8, 12);
+    ctx.fillStyle = DEEPER_24[1];
+    ctx.fillRect(5, 3, 6, 10);
+
+    // Ethereal purple eyes (#7456b8 Abyssal Highlight)
+    ctx.fillStyle = PALETTE.abyss;
+    ctx.fillRect(6, 5, 1, 2);
+    ctx.fillRect(9, 5, 1, 2);
+
+    canvas.refresh();
+  }
+
+  private generatePhantomTexture(): void {
+    const canvas = this.scene.textures.createCanvas('spr_phantom', TILE_SIZE, TILE_SIZE);
+    if (!canvas) return;
+    const ctx = canvas.context;
+    ctx.clearRect(0, 0, TILE_SIZE, TILE_SIZE);
+
+    // Smoke / mist phantom (#806d5c Muted Stone)
+    ctx.fillStyle = DEEPER_24[6];
+    ctx.fillRect(5, 3, 6, 10);
+    ctx.fillRect(4, 5, 8, 6);
+    ctx.fillStyle = DEEPER_24[7];
+    ctx.fillRect(6, 6, 4, 4);
+
+    canvas.refresh();
+  }
+
+  private generateStatusIcons(): void {
+    // Alert Icon (!)
+    const canvasAlert = this.scene.textures.createCanvas('icon_alert', 8, 8);
+    if (canvasAlert) {
+      const ctx = canvasAlert.context;
+      ctx.clearRect(0, 0, 8, 8);
+      ctx.fillStyle = PALETTE.danger;
+      ctx.fillRect(3, 1, 2, 4);
+      ctx.fillRect(3, 6, 2, 1);
+      canvasAlert.refresh();
+    }
+
+    // Suspicious Icon (?)
+    const canvasSuspicious = this.scene.textures.createCanvas('icon_suspicious', 8, 8);
+    if (canvasSuspicious) {
+      const ctx = canvasSuspicious.context;
+      ctx.clearRect(0, 0, 8, 8);
+      ctx.fillStyle = PALETTE.goldAccent;
+      ctx.fillRect(2, 1, 4, 1);
+      ctx.fillRect(5, 2, 1, 2);
+      ctx.fillRect(3, 4, 2, 1);
+      ctx.fillRect(3, 6, 2, 1);
+      canvasSuspicious.refresh();
+    }
+  }
+
   private getTextureForTile(type: TileType): string {
     switch (type) {
       case 'WALL':
@@ -412,6 +552,28 @@ export class DungeonRenderer {
         img.setVisible(false);
       }
     }
+
+    // Update monster lighting (monsters only visible when lit)
+    for (const [id, img] of this.monsterImages.entries()) {
+      const x = Math.floor(img.x / TILE_SIZE);
+      const y = Math.floor(img.y / TILE_SIZE);
+      const idx = toIndex(x, y, this.floor.width);
+      const isVisible = Boolean(fog.visible[idx]);
+      img.setVisible(isVisible);
+
+      const overhead = this.monsterOverheads.get(id);
+      if (overhead) {
+        overhead.setVisible(isVisible);
+      }
+    }
+
+    // Update hallucination lighting
+    for (const img of this.hallucinationImages.values()) {
+      const x = Math.floor(img.x / TILE_SIZE);
+      const y = Math.floor(img.y / TILE_SIZE);
+      const idx = toIndex(x, y, this.floor.width);
+      img.setVisible(Boolean(fog.visible[idx]));
+    }
   }
 
   /**
@@ -496,6 +658,103 @@ export class DungeonRenderer {
     }
   }
 
+  /**
+   * Synchronizes monster sprites and overhead status icons.
+   */
+  public syncMonsters(monsters: readonly Monster[], fog: FogOfWar): void {
+    const activeIds = new Set<string>();
+
+    for (const monster of monsters) {
+      activeIds.add(monster.id);
+      let img = this.monsterImages.get(monster.id);
+
+      if (!img) {
+        const tex =
+          monster.type === 'crawler'
+            ? 'spr_crawler'
+            : monster.type === 'listener'
+              ? 'spr_listener'
+              : 'spr_stalker';
+        img = this.scene.add.image(monster.x * TILE_SIZE, monster.y * TILE_SIZE, tex);
+        img.setOrigin(0, 0);
+        img.setDepth(7);
+        this.monsterImages.set(monster.id, img);
+      } else {
+        img.setPosition(monster.x * TILE_SIZE, monster.y * TILE_SIZE);
+      }
+
+      const idx = toIndex(monster.x, monster.y, this.floor.width);
+      const isVisible = Boolean(fog.visible[idx]);
+      img.setVisible(isVisible);
+
+      // Overhead state icons (? or !)
+      let overhead = this.monsterOverheads.get(monster.id);
+      if (monster.state === 'CHASE' || monster.state === 'SUSPICIOUS') {
+        const iconTex = monster.state === 'CHASE' ? 'icon_alert' : 'icon_suspicious';
+        if (!overhead) {
+          overhead = this.scene.add.image(
+            monster.x * TILE_SIZE + 4,
+            monster.y * TILE_SIZE - 6,
+            iconTex
+          );
+          overhead.setOrigin(0, 0);
+          overhead.setDepth(8);
+          this.monsterOverheads.set(monster.id, overhead);
+        } else {
+          overhead.setTexture(iconTex);
+          overhead.setPosition(monster.x * TILE_SIZE + 4, monster.y * TILE_SIZE - 6);
+        }
+        overhead.setVisible(isVisible);
+      } else if (overhead) {
+        overhead.setVisible(false);
+      }
+    }
+
+    for (const [id, img] of this.monsterImages.entries()) {
+      if (!activeIds.has(id)) {
+        img.destroy();
+        this.monsterImages.delete(id);
+        const overhead = this.monsterOverheads.get(id);
+        if (overhead) {
+          overhead.destroy();
+          this.monsterOverheads.delete(id);
+        }
+      }
+    }
+  }
+
+  /**
+   * Synchronizes psychological phantom hallucinations.
+   */
+  public syncHallucinations(hallucinations: readonly Hallucination[], fog: FogOfWar): void {
+    const activeIds = new Set<string>();
+
+    for (const h of hallucinations) {
+      activeIds.add(h.id);
+      let img = this.hallucinationImages.get(h.id);
+
+      if (!img) {
+        img = this.scene.add.image(h.x * TILE_SIZE, h.y * TILE_SIZE, 'spr_phantom');
+        img.setOrigin(0, 0);
+        img.setDepth(7);
+        img.setAlpha(0.65);
+        this.hallucinationImages.set(h.id, img);
+      } else {
+        img.setPosition(h.x * TILE_SIZE, h.y * TILE_SIZE);
+      }
+
+      const idx = toIndex(h.x, h.y, this.floor.width);
+      img.setVisible(Boolean(fog.visible[idx]));
+    }
+
+    for (const [id, img] of this.hallucinationImages.entries()) {
+      if (!activeIds.has(id)) {
+        img.destroy();
+        this.hallucinationImages.delete(id);
+      }
+    }
+  }
+
   public destroy(): void {
     for (const img of this.tileImages) {
       img.destroy();
@@ -509,6 +768,18 @@ export class DungeonRenderer {
       img.destroy();
     }
     this.flaskImages.clear();
+    for (const img of this.monsterImages.values()) {
+      img.destroy();
+    }
+    this.monsterImages.clear();
+    for (const overhead of this.monsterOverheads.values()) {
+      overhead.destroy();
+    }
+    this.monsterOverheads.clear();
+    for (const img of this.hallucinationImages.values()) {
+      img.destroy();
+    }
+    this.hallucinationImages.clear();
     if (this.playerSprite) {
       this.playerSprite.destroy();
       this.playerSprite = null;
