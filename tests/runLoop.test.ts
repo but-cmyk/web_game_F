@@ -101,12 +101,14 @@ describe('Single Run Loop & Run Lifecycle', () => {
     expect(result.consumedTurn).toBe(true);
     expect(state.isExtracted).toBe(true);
     expect(state.bankedGold).toBe(125); // 50 + 75
-    expect(runEndedSpy).toHaveBeenCalledWith({
-      outcome: 'extracted',
-      depth: 3,
-      bankedGold: 75,
-      lostGold: 0,
-    });
+    expect(runEndedSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcome: 'extracted',
+        depth: 3,
+        bankedGold: 75,
+        lostGold: 0,
+      })
+    );
   });
 
   it('applies 1.25x gold multiplier upon extracting at final exit depth 12', () => {
@@ -124,12 +126,14 @@ describe('Single Run Loop & Run Lifecycle', () => {
     expect(state.isExtracted).toBe(true);
     // 100 * 1.25 = 125
     expect(state.bankedGold).toBe(125);
-    expect(runEndedSpy).toHaveBeenCalledWith({
-      outcome: 'extracted',
-      depth: 12,
-      bankedGold: 125,
-      lostGold: 0,
-    });
+    expect(runEndedSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcome: 'extracted',
+        depth: 12,
+        bankedGold: 125,
+        lostGold: 0,
+      })
+    );
   });
 
   it('wipes carried gold on death, emits RunEnded died, and leaves treasury intact', () => {

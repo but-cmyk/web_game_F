@@ -94,11 +94,14 @@ export interface ExtractStartedEvent {
   readonly turnsRemaining: number;
 }
 
+import { RawDecisionCounts } from './mirror';
+
 export interface RunEndedEvent {
   readonly outcome: 'extracted' | 'died';
   readonly depth: number;
   readonly bankedGold: number;
   readonly lostGold: number;
+  readonly decisionCounts?: RawDecisionCounts;
 }
 
 export interface GameEventMap {

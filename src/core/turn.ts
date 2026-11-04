@@ -6,8 +6,8 @@
  * Pure TypeScript, zero Phaser imports.
  */
 
+export type { Coord, Direction } from './grid';
 import { Coord, Direction, inBounds, toIndex } from './grid';
-export type { Coord, Direction };
 import { DungeonFloor } from './mapgen';
 import { EventBus } from './events';
 import {
@@ -41,6 +41,7 @@ import {
 import { resolveBargain, processRopeChannelTurn } from './bargains';
 import { calculateNoiseWithBoots } from './upgrades';
 import { Rng } from './rng';
+import { RawDecisionCounts } from './mirror';
 
 export type MovementMode = 'sneak' | 'walk' | 'run';
 
@@ -90,6 +91,24 @@ export interface DungeonState {
   eventBus: EventBus;
   rng?: Rng;
   upgrades?: Readonly<Record<string, number>>;
+  decisionCounts?: RawDecisionCounts;
+}
+
+function getDecisionCounts(state: DungeonState): RawDecisionCounts {
+  if (!state.decisionCounts) {
+    state.decisionCounts = {
+      bypassedExit: 0,
+      cursedAccepted: 0,
+      bargainsAccepted: 0,
+      pushedOnHighDread: 0,
+      earlyExit: 0,
+      bargainsDeclined: 0,
+      chestsSkipped: 0,
+      sneakSteps: 0,
+      totalSteps: 0,
+    };
+  }
+  return state.decisionCounts;
 }
 
 function getDelta(direction: Direction): Coord {
@@ -143,6 +162,7 @@ export class TurnResolver {
         state.carriedGold += chest.goldValue;
 
         if (chest.isCursed) {
+          getDecisionCounts(state).cursedAccepted += 1;
           const rng = state.rng ?? new Rng(state.turnCount + 1);
           const curse = rollCursedChestCurse(rng);
           if (!state.activeCurses) state.activeCurses = [];
@@ -191,6 +211,13 @@ export class TurnResolver {
         const bargain = state.bargainPedestal.bargains.find((b) => b.id === action.bargainId);
         if (!bargain) return { consumedTurn: false };
 
+        const dc = getDecisionCounts(state);
+        if (action.accepted) {
+          dc.bargainsAccepted += 1;
+        } else {
+          dc.bargainsDeclined += 1;
+        }
+
         resolveBargain(state, bargain, action.accepted);
         state.bargainPedestal.isUsed = true;
         return { consumedTurn: false };
@@ -209,6 +236,13 @@ export class TurnResolver {
           state.playerPos.y === state.floor.stairsDown.y;
 
         if (isAtStairs) {
+          const dc = getDecisionCounts(state);
+          if (state.dread >= 70) {
+            dc.pushedOnHighDread += 1;
+          }
+          const unopened = (state.chests || []).filter((c) => !c.isOpen).length;
+          dc.chestsSkipped += unopened;
+
           state.turnCount += 1;
           state.dread = applyFloorTransitionCurses(
             state.dread,
@@ -228,6 +262,13 @@ export class TurnResolver {
           state.playerPos.y === station.y;
 
         if (isAtStation) {
+          const dc = getDecisionCounts(state);
+          if (state.oil >= 50 && state.dread < 40) {
+            dc.earlyExit += 1;
+          }
+          const unopened = (state.chests || []).filter((c) => !c.isOpen).length;
+          dc.chestsSkipped += unopened;
+
           const multiplier = state.depth === 12 ? 1.25 : 1.0;
           const goldToBank = Math.round(state.carriedGold * multiplier);
           state.bankedGold += goldToBank;
@@ -239,6 +280,7 @@ export class TurnResolver {
             depth: state.depth,
             bankedGold: goldToBank,
             lostGold: 0,
+            decisionCounts: state.decisionCounts,
           });
 
           return { consumedTurn: true, runEnded: 'extracted' };
@@ -262,6 +304,17 @@ export class TurnResolver {
 
         if (tile === 'WALL') {
           return { consumedTurn: false };
+        }
+
+        // Decision tracking
+        const dc = getDecisionCounts(state);
+        dc.totalSteps += 1;
+        if (state.movementMode === 'sneak') {
+          dc.sneakSteps += 1;
+        }
+        const st = state.floor.extractionStation;
+        if (st && state.playerPos.x === st.x && state.playerPos.y === st.y && state.oil >= 30) {
+          dc.bypassedExit += 1;
         }
 
         // 1. Consume oil based on depth and movement mode
@@ -520,6 +573,7 @@ export class TurnResolver {
         depth: state.depth,
         bankedGold: 0,
         lostGold: lost,
+        decisionCounts: state.decisionCounts,
       });
       return true;
     }

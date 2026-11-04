@@ -24,6 +24,7 @@ import { spawnMonsters } from '../core/monsters';
 import { calculateLightRadius } from '../core/fear';
 import { applyCurseLightModifier } from '../core/curses';
 import { applyUpgradesToState } from '../core/upgrades';
+import { calculateGreedFearMetrics, RunMirrorMetric, RawDecisionCounts } from '../core/mirror';
 import { DungeonRenderer, TILE_SIZE } from '../views/DungeonRenderer';
 import { PostFX } from '../views/PostFX';
 import { defaultAudioDirector } from '../audio/AudioDirector';
@@ -254,11 +255,34 @@ export class RunScene extends Phaser.Scene {
 
     this.eventBus.on('RunEnded', (payload) => {
       const currentSave = defaultSaveStore.load();
+      const counts: RawDecisionCounts = payload.decisionCounts ?? {
+        bypassedExit: 0,
+        cursedAccepted: 0,
+        bargainsAccepted: 0,
+        pushedOnHighDread: 0,
+        earlyExit: 0,
+        bargainsDeclined: 0,
+        chestsSkipped: 0,
+        sneakSteps: 0,
+        totalSteps: 0,
+      };
+      const metrics = calculateGreedFearMetrics(counts);
+      const runMetric: RunMirrorMetric = {
+        greedRaw: metrics.greedRaw,
+        fearRaw: metrics.fearRaw,
+        depth: payload.depth,
+        gold: payload.outcome === 'extracted' ? payload.bankedGold : 0,
+        outcome: payload.outcome,
+        timestamp: Date.now(),
+      };
+
+      const history = [...(currentSave.recentRunMetrics ?? []), runMetric].slice(-10);
       const updatedSave = {
         ...currentSave,
         bankedGold: this.state.bankedGold,
         runsCompleted: currentSave.runsCompleted + (payload.outcome === 'extracted' ? 1 : 0),
         deaths: currentSave.deaths + (payload.outcome === 'died' ? 1 : 0),
+        recentRunMetrics: history,
       };
       defaultSaveStore.save(updatedSave);
 
@@ -269,6 +293,7 @@ export class RunScene extends Phaser.Scene {
           bankedGoldAdded: payload.bankedGold,
           lostGold: payload.lostGold,
           totalBanked: this.state.bankedGold,
+          mirrorMetric: runMetric,
         });
       });
     });

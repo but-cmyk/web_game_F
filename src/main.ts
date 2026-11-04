@@ -5,6 +5,8 @@ import { RunScene } from './scenes/RunScene';
 import { SummaryScene } from './scenes/SummaryScene';
 import { CodexScene } from './scenes/CodexScene';
 import { ShopScene } from './scenes/ShopScene';
+import { MirrorScene } from './scenes/MirrorScene';
+import { TutorialScene } from './scenes/TutorialScene';
 import { hexToNumber, PALETTE } from './utils/palette';
 
 export const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
@@ -26,7 +28,7 @@ export const GAME_CONFIG: Phaser.Types.Core.GameConfig = {
     pixelArt: true,
     roundPixels: true,
   },
-  scene: [BootScene, MenuScene, RunScene, SummaryScene, CodexScene, ShopScene],
+  scene: [BootScene, MenuScene, RunScene, SummaryScene, CodexScene, ShopScene, MirrorScene, TutorialScene],
 };
 
 declare global {

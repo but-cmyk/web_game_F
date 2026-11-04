@@ -5,6 +5,8 @@
  * Zero any.
  */
 
+import { RunMirrorMetric } from '../core/mirror';
+
 export interface GameSave {
   readonly version: number;
   readonly bankedGold: number;
@@ -13,6 +15,8 @@ export interface GameSave {
   readonly deaths: number;
   readonly lastPlayedDate?: string;
   readonly reduceMotion?: boolean;
+  readonly recentRunMetrics?: ReadonlyArray<RunMirrorMetric>;
+  readonly hasCompletedTutorial?: boolean;
 }
 
 export const CURRENT_SAVE_VERSION = 1;
@@ -23,6 +27,8 @@ export const DEFAULT_SAVE: GameSave = {
   upgrades: {},
   runsCompleted: 0,
   deaths: 0,
+  recentRunMetrics: [],
+  hasCompletedTutorial: false,
 };
 
 export interface SaveStore {

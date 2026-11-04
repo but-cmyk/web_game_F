@@ -7,6 +7,7 @@
 import Phaser from 'phaser';
 import { PALETTE, hexToNumber } from '../utils/palette';
 import { t } from '../i18n';
+import { RunMirrorMetric } from '../core/mirror';
 
 export interface SummarySceneData {
   readonly outcome: 'extracted' | 'died';
@@ -14,6 +15,7 @@ export interface SummarySceneData {
   readonly bankedGoldAdded: number;
   readonly lostGold: number;
   readonly totalBanked: number;
+  readonly mirrorMetric?: RunMirrorMetric;
 }
 
 export class SummaryScene extends Phaser.Scene {
@@ -96,13 +98,22 @@ export class SummaryScene extends Phaser.Scene {
       )
       .setOrigin(0.5);
 
-    // Continue Prompt
-    const continuePrompt = this.add
-      .text(width / 2, 154, t('summary.continue_prompt'), {
+    // Mirror Button & Continue Prompts
+    const mirrorBtn = this.add
+      .text(width / 2, 142, t('summary.mirror_btn').toUpperCase(), {
         fontSize: '8px',
-        color: PALETTE.focus,
+        color: PALETTE.goldAccent,
         fontFamily: 'monospace',
         fontStyle: 'bold',
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
+    const continuePrompt = this.add
+      .text(width / 2, 158, t('summary.continue_prompt'), {
+        fontSize: '7px',
+        color: PALETTE.textDim,
+        fontFamily: 'monospace',
       })
       .setOrigin(0.5);
 
@@ -114,16 +125,30 @@ export class SummaryScene extends Phaser.Scene {
       repeat: -1,
     });
 
-    // Return to Menu trigger
-    let returned = false;
+    let navigated = false;
+    const goToMirror = () => {
+      if (navigated) return;
+      navigated = true;
+      this.scene.start('MirrorScene', { mirrorMetric: data.mirrorMetric });
+    };
+
     const returnToMenu = () => {
-      if (returned) return;
-      returned = true;
+      if (navigated) return;
+      navigated = true;
       this.scene.start('MenuScene');
     };
 
-    this.input.keyboard?.once('keydown', returnToMenu);
-    this.input.once('pointerdown', returnToMenu);
+    mirrorBtn.on('pointerdown', goToMirror);
+    this.input.keyboard?.on('keydown-M', goToMirror);
+    this.input.keyboard?.on('keydown-SPACE', returnToMenu);
+    this.input.keyboard?.on('keydown-ENTER', returnToMenu);
+    this.input.keyboard?.on('keydown-ESC', returnToMenu);
+    this.input.once('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      // If clicked outside the mirror button
+      if (pointer.y > 150) {
+        returnToMenu();
+      }
+    });
   }
 }
 

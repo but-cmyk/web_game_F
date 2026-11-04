@@ -216,6 +216,7 @@ export function processRopeChannelTurn(
       depth: state.depth,
       bankedGold: bankedAmount,
       lostGold: 0,
+      decisionCounts: state.decisionCounts,
     });
 
     return {
