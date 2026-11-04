@@ -1,10 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   oilCostPerStep,
   calculateLightRadius,
   calculateNoiseRadius,
   updateDread,
 } from '../src/core/fear';
+import { TurnResolver, DungeonState } from '../src/core/turn';
+import { EventBus } from '../src/core/events';
+import { DungeonFloor } from '../src/core/mapgen';
+import { spawnOilFlasks, pickupOilFlask } from '../src/core/loot';
+import { Rng } from '../src/core/rng';
 
 describe('Fear System Core Formulas', () => {
   describe('oilCostPerStep formula', () => {
@@ -79,6 +84,115 @@ describe('Fear System Core Formulas', () => {
     it('strictly clamps maximum Dread at 100', () => {
       expect(updateDread(99, false, false)).toBe(100);
       expect(updateDread(98, false, true)).toBe(100);
+    });
+  });
+
+  describe('Turn Pipeline Fear Integration', () => {
+    function createTestDungeonFloor(): DungeonFloor {
+      const width = 10;
+      const height = 10;
+      const tiles = new Array(width * height).fill('FLOOR');
+      return {
+        width,
+        height,
+        tiles,
+        entrance: { x: 1, y: 1 },
+        stairsDown: { x: 8, y: 8 },
+        rooms: [],
+      };
+    }
+
+    it('depletes oil, emits noise event, and increases Dread upon movement', () => {
+      const floor = createTestDungeonFloor();
+      const eventBus = new EventBus();
+      const noiseSpy = vi.fn();
+      const dreadSpy = vi.fn();
+      eventBus.on('NoiseEmitted', noiseSpy);
+      eventBus.on('DreadChanged', dreadSpy);
+
+      const state: DungeonState = {
+        floor,
+        playerPos: { x: 2, y: 2 },
+        movementMode: 'walk',
+        turnCount: 0,
+        depth: 1,
+        hp: 2,
+        carriedGold: 0,
+        bankedGold: 0,
+        oil: 100,
+        maxOil: 100,
+        dread: 10,
+        goldPiles: [],
+        oilFlasks: [],
+        isExtracted: false,
+        isDead: false,
+        eventBus,
+      };
+
+      const result = TurnResolver.step(state, { type: 'MOVE', direction: 'E' });
+
+      expect(result.consumedTurn).toBe(true);
+      expect(state.playerPos).toEqual({ x: 3, y: 2 });
+
+      // Oil decreased by oilCostPerStep(1, 'walk') = 1.15 -> 100 - 1.15 = 98.85
+      expect(state.oil).toBeCloseTo(98.85, 2);
+
+      // Noise emitted: radius 4 for walk
+      expect(noiseSpy).toHaveBeenCalledWith({
+        x: 3,
+        y: 2,
+        radius: 4,
+        source: 'player',
+      });
+
+      // Dread increased: 10 + 2 = 12
+      expect(state.dread).toBe(12);
+      expect(dreadSpy).toHaveBeenCalledWith({
+        oldDread: 10,
+        newDread: 12,
+        reason: 'darkness_step',
+      });
+    });
+
+    it('toggles movement mode via SET_MODE without consuming a turn', () => {
+      const floor = createTestDungeonFloor();
+      const eventBus = new EventBus();
+      const state: DungeonState = {
+        floor,
+        playerPos: { x: 2, y: 2 },
+        movementMode: 'walk',
+        turnCount: 0,
+        depth: 1,
+        hp: 2,
+        carriedGold: 0,
+        bankedGold: 0,
+        oil: 100,
+        maxOil: 100,
+        dread: 0,
+        goldPiles: [],
+        oilFlasks: [],
+        isExtracted: false,
+        isDead: false,
+        eventBus,
+      };
+
+      const res = TurnResolver.step(state, { type: 'SET_MODE', mode: 'sneak' });
+      expect(res.consumedTurn).toBe(false);
+      expect(state.movementMode).toBe('sneak');
+      expect(state.turnCount).toBe(0);
+    });
+
+    it('spawns 2-3 oil flasks and collects +15 oil upon stepping onto flask tile', () => {
+      const rng = new Rng(777);
+      const floor = createTestDungeonFloor();
+      const flasks = spawnOilFlasks(floor, 1, rng);
+
+      expect(flasks.length).toBeGreaterThanOrEqual(2);
+      expect(flasks.length).toBeLessThanOrEqual(3);
+
+      const pickupRes = pickupOilFlask(flasks, { x: flasks[0].x, y: flasks[0].y });
+      expect(pickupRes.collectedAmount).toBe(15);
+      expect(pickupRes.remainingFlasks.length).toBe(flasks.length - 1);
     });
   });
 });

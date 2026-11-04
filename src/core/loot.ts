@@ -14,6 +14,13 @@ export interface GoldPile {
   readonly amount: number;
 }
 
+export interface OilFlask {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+  readonly amount: number;
+}
+
 /**
  * Calculates base loot value scaled by depth:
  * lootValue(depth) = round(10 * 1.3^(depth - 1))
@@ -81,5 +88,66 @@ export function pickupGold(
   }
 
   return { remainingPiles, collectedAmount };
+}
+
+/**
+ * Deterministically spawns 2-3 oil flasks (+15 oil each) on walkable floor tiles.
+ */
+export function spawnOilFlasks(floor: DungeonFloor, depth: number, rng: Rng): OilFlask[] {
+  const count = rng.nextInt(2, 3);
+  const amount = 15;
+
+  const candidates: Coord[] = [];
+  for (let y = 0; y < floor.height; y++) {
+    for (let x = 0; x < floor.width; x++) {
+      const idx = toIndex(x, y, floor.width);
+      if (floor.tiles[idx] !== 'FLOOR') continue;
+      if (x === floor.entrance.x && y === floor.entrance.y) continue;
+      if (x === floor.stairsDown.x && y === floor.stairsDown.y) continue;
+      if (floor.extractionStation && x === floor.extractionStation.x && y === floor.extractionStation.y) continue;
+      candidates.push({ x, y });
+    }
+  }
+
+  const flasks: OilFlask[] = [];
+  const chosenIndices = new Set<number>();
+  const needed = Math.min(count, candidates.length);
+
+  while (flasks.length < needed) {
+    const pickIdx = rng.nextInt(0, candidates.length - 1);
+    if (!chosenIndices.has(pickIdx)) {
+      chosenIndices.add(pickIdx);
+      const coord = candidates[pickIdx];
+      flasks.push({
+        id: `oil_${depth}_${flasks.length}_${coord.x}_${coord.y}`,
+        x: coord.x,
+        y: coord.y,
+        amount,
+      });
+    }
+  }
+
+  return flasks;
+}
+
+/**
+ * Checks if an oil flask is at target position, returns collected amount and remaining flasks.
+ */
+export function pickupOilFlask(
+  flasks: readonly OilFlask[],
+  pos: Coord
+): { remainingFlasks: OilFlask[]; collectedAmount: number } {
+  let collectedAmount = 0;
+  const remainingFlasks: OilFlask[] = [];
+
+  for (const flask of flasks) {
+    if (flask.x === pos.x && flask.y === pos.y) {
+      collectedAmount += flask.amount;
+    } else {
+      remainingFlasks.push(flask);
+    }
+  }
+
+  return { remainingFlasks, collectedAmount };
 }
 

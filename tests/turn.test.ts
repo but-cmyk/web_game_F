@@ -45,7 +45,11 @@ describe('Turn Resolution Framework', () => {
       hp: 2,
       carriedGold: 0,
       bankedGold: 0,
+      oil: 100,
+      maxOil: 100,
+      dread: 0,
       goldPiles: [],
+      oilFlasks: [],
       isExtracted: false,
       isDead: false,
       eventBus,
@@ -72,7 +76,7 @@ describe('Turn Resolution Framework', () => {
       x: 2,
       y: 3,
       mode: 'walk',
-      oilCost: 1,
+      oilCost: 1.15,
     });
   });
 
