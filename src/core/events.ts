@@ -83,7 +83,7 @@ export interface GameEventMap {
 type EventListener<T> = (payload: T) => void;
 type UntypedListener = (payload: unknown) => void;
 
-export class EventBus<Events extends Record<string, unknown>> {
+export class EventBus<Events = GameEventMap> {
   private listeners: Map<keyof Events, Set<UntypedListener>> = new Map();
 
   on<K extends keyof Events>(event: K, listener: EventListener<Events[K]>): () => void {
