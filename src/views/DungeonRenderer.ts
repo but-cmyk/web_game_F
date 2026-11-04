@@ -9,6 +9,7 @@ import Phaser from 'phaser';
 import { DungeonFloor, TileType } from '../core/mapgen';
 import { FogOfWar } from '../core/fov';
 import { toIndex } from '../core/grid';
+import { GoldPile } from '../core/loot';
 import { DEEPER_24, PALETTE, hexToNumber } from '../utils/palette';
 
 export const TILE_SIZE = 16;
@@ -17,6 +18,7 @@ export class DungeonRenderer {
   private scene: Phaser.Scene;
   private floor: DungeonFloor;
   private tileImages: Phaser.GameObjects.Image[] = [];
+  private goldImages: Map<string, Phaser.GameObjects.Image> = new Map();
   private playerSprite: Phaser.GameObjects.Image | null = null;
 
   constructor(scene: Phaser.Scene, floor: DungeonFloor) {
@@ -42,6 +44,12 @@ export class DungeonRenderer {
     }
     if (!this.scene.textures.exists('tile_entrance')) {
       this.generateEntranceTexture();
+    }
+    if (!this.scene.textures.exists('tile_extraction_station')) {
+      this.generateExtractionStationTexture();
+    }
+    if (!this.scene.textures.exists('tile_gold')) {
+      this.generateGoldTexture();
     }
     if (!this.scene.textures.exists('spr_player')) {
       this.generatePlayerTexture();
@@ -185,6 +193,58 @@ export class DungeonRenderer {
     canvas.refresh();
   }
 
+  private generateExtractionStationTexture(): void {
+    const canvas = this.scene.textures.createCanvas('tile_extraction_station', TILE_SIZE, TILE_SIZE);
+    if (!canvas) return;
+    const ctx = canvas.context;
+
+    // Floor base
+    ctx.fillStyle = DEEPER_24[2];
+    ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+
+    // Wooden hoist scaffolding (#4a3e35 & #352d27)
+    ctx.fillStyle = DEEPER_24[4];
+    ctx.fillRect(2, 2, 2, 12);
+    ctx.fillRect(12, 2, 2, 12);
+    ctx.fillRect(2, 2, 12, 2);
+
+    // Extraction winch & golden cable
+    ctx.fillStyle = DEEPER_24[10];
+    ctx.fillRect(6, 4, 4, 4);
+    ctx.fillStyle = DEEPER_24[12];
+    ctx.fillRect(7, 5, 2, 2);
+    ctx.fillRect(7, 8, 2, 6);
+
+    // Radiant amber beacon (#fff1b0)
+    ctx.fillStyle = DEEPER_24[13];
+    ctx.fillRect(7, 3, 2, 1);
+
+    canvas.refresh();
+  }
+
+  private generateGoldTexture(): void {
+    const canvas = this.scene.textures.createCanvas('tile_gold', TILE_SIZE, TILE_SIZE);
+    if (!canvas) return;
+    const ctx = canvas.context;
+
+    ctx.clearRect(0, 0, TILE_SIZE, TILE_SIZE);
+
+    // Gold coin mound (#9e6b22 Tarnished, #e09f3e Warm Amber, #f4d06f Radiant Gold)
+    ctx.fillStyle = DEEPER_24[10];
+    ctx.fillRect(4, 9, 8, 4);
+    ctx.fillStyle = DEEPER_24[11];
+    ctx.fillRect(5, 7, 6, 4);
+    ctx.fillStyle = DEEPER_24[12];
+    ctx.fillRect(6, 6, 4, 3);
+
+    // Sparkle flecks (#fff1b0 Highlight)
+    ctx.fillStyle = DEEPER_24[13];
+    ctx.fillRect(6, 7, 1, 1);
+    ctx.fillRect(9, 9, 1, 1);
+
+    canvas.refresh();
+  }
+
   private getTextureForTile(type: TileType): string {
     switch (type) {
       case 'WALL':
@@ -195,6 +255,8 @@ export class DungeonRenderer {
         return 'tile_stairs_down';
       case 'ENTRANCE':
         return 'tile_entrance';
+      case 'EXTRACTION_STATION':
+        return 'tile_extraction_station';
     }
   }
 
@@ -279,6 +341,67 @@ export class DungeonRenderer {
         img.setVisible(false);
       }
     }
+
+    // Update gold pile lighting
+    for (const img of this.goldImages.values()) {
+      const x = Math.floor(img.x / TILE_SIZE);
+      const y = Math.floor(img.y / TILE_SIZE);
+      const idx = toIndex(x, y, this.floor.width);
+
+      if (fog.visible[idx]) {
+        img.setVisible(true);
+        img.setAlpha(1.0);
+        img.clearTint();
+      } else if (fog.explored[idx]) {
+        img.setVisible(true);
+        img.setAlpha(0.35);
+        img.setTint(memoryTint);
+      } else {
+        img.setVisible(false);
+      }
+    }
+  }
+
+  /**
+   * Synchronizes gold pile sprites with current active gold piles on the floor.
+   */
+  public syncGoldPiles(piles: readonly GoldPile[], fog: FogOfWar): void {
+    const activeIds = new Set<string>();
+    const memoryTint = hexToNumber(PALETTE.panelBorder);
+
+    for (const pile of piles) {
+      activeIds.add(pile.id);
+      let img = this.goldImages.get(pile.id);
+
+      if (!img) {
+        img = this.scene.add.image(pile.x * TILE_SIZE, pile.y * TILE_SIZE, 'tile_gold');
+        img.setOrigin(0, 0);
+        img.setDepth(5);
+        this.goldImages.set(pile.id, img);
+      }
+
+      // Update visibility according to fog
+      const idx = toIndex(pile.x, pile.y, this.floor.width);
+      if (fog.visible[idx]) {
+        img.setVisible(true);
+        img.setAlpha(1.0);
+        img.clearTint();
+      } else if (fog.explored[idx]) {
+        img.setVisible(true);
+        img.setAlpha(0.35);
+        img.setTint(memoryTint);
+      } else {
+        img.setVisible(false);
+      }
+    }
+
+    // Remove sprites for collected piles
+    for (const [id, img] of this.goldImages.entries()) {
+      if (!activeIds.has(id)) {
+        img.destroy();
+        this.goldImages.delete(id);
+      }
+    }
   }
 
   public destroy(): void {
@@ -286,6 +409,10 @@ export class DungeonRenderer {
       img.destroy();
     }
     this.tileImages = [];
+    for (const img of this.goldImages.values()) {
+      img.destroy();
+    }
+    this.goldImages.clear();
     if (this.playerSprite) {
       this.playerSprite.destroy();
       this.playerSprite = null;

@@ -1,6 +1,7 @@
 {
   "action.accept": "Đồng ý",
   "action.decline": "Từ chối",
+  "action.descend": "Xuống tầng dưới",
   "action.extract": "Rút lui & Gửi vàng",
   "boot.canvas_info": "Canvas 320x180 Pixel-Perfect",
   "boot.palette_title": "BẢNG MÀU DEEPER-24",
@@ -9,6 +10,7 @@
   "game.subtitle": "Roguelike Đẩy Vận May Hầm Mỏ",
   "game.title": "DEEPER — Sâu Thêm Chút Nữa",
   "game.title_display": "D E E P E R",
+  "hud.carried_gold": "Vàng: {gold}",
   "hud.controls_hint": "WASD / PHÍM MŨI TÊN / VUỐT",
   "hud.depth": "Tầng {depth}",
   "hud.dread": "Nỗi sợ: {dread}",
@@ -17,7 +19,16 @@
   "hud.hp": "Máu: {hp}",
   "hud.oil": "Dầu: {oil}%",
   "hud.turn": "Lượt {turn}",
+  "menu.press_start": "NHẤN SPACE HOẶC CHẠM ĐỂ XUỐNG HẦM",
   "menu.settings": "Cài đặt",
-  "menu.start": "Bắt đầu cuộc thám hiểm"
+  "menu.start": "Bắt đầu cuộc thám hiểm",
+  "menu.treasury": "Kho vàng: {gold} Vàng",
+  "summary.continue_prompt": "NHẤN SPACE HOẶC CHẠM ĐỂ TIẾP TỤC",
+  "summary.depth_reached": "Tầng sâu nhất đạt được: Tầng {depth}",
+  "summary.gold_banked": "Vàng gửi vào kho: +{amount}",
+  "summary.gold_lost": "Vàng đánh mất: -{amount}",
+  "summary.title_died": "BỎ MẠNG NƠI ĐÁY SÂU",
+  "summary.title_extracted": "RÚT LUI THÀNH CÔNG",
+  "summary.total_treasury": "Tổng số dư kho vàng: {total} Vàng"
 }
 
