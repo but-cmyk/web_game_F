@@ -8,7 +8,7 @@
 import { Rng } from './rng';
 import { Coord, toIndex, inBounds, propagateBFS } from './grid';
 
-export type TileType = 'WALL' | 'FLOOR' | 'STAIRS_DOWN' | 'ENTRANCE';
+export type TileType = 'WALL' | 'FLOOR' | 'STAIRS_DOWN' | 'ENTRANCE' | 'EXTRACTION_STATION';
 
 export interface Room {
   readonly id: number;
@@ -26,6 +26,7 @@ export interface DungeonFloor {
   readonly tiles: readonly TileType[];
   readonly entrance: Coord;
   readonly stairsDown: Coord;
+  readonly extractionStation?: Coord;
   readonly rooms: readonly Room[];
 }
 
@@ -135,6 +136,7 @@ function connectSiblingRooms(node: BSPNode, grid: TileType[], width: number, rng
 
 export function generateDungeon(
   rng: Rng,
+  depth: number = 1,
   width: number = MAP_WIDTH,
   height: number = MAP_HEIGHT
 ): DungeonFloor {
@@ -222,34 +224,49 @@ export function generateDungeon(
     }
   }
 
-  // If candidateCoords is empty because layout was compact, extend corridor to opposite leaf
+  // Pick stairs down location
+  let chosenStairs: Coord;
   if (candidateCoords.length === 0) {
-    // Pick farthest room and connect through an extra loop or use maxCoord
-    const candidate = maxCoord;
-    tiles[toIndex(candidate.x, candidate.y, width)] = 'STAIRS_DOWN';
-    return {
-      width,
-      height,
-      tiles,
-      entrance,
-      stairsDown: candidate,
-      rooms,
-    };
+    chosenStairs = maxCoord;
+  } else {
+    candidateCoords.sort((a, b) => b.dist - a.dist);
+    const pickPool = candidateCoords.slice(0, Math.max(1, Math.floor(candidateCoords.length * 0.2)));
+    chosenStairs = rng.pick(pickPool).coord;
   }
+  tiles[toIndex(chosenStairs.x, chosenStairs.y, width)] = 'STAIRS_DOWN';
 
-  // Sort candidates by distance descending and pick from top 20%
-  candidateCoords.sort((a, b) => b.dist - a.dist);
-  const pickPool = candidateCoords.slice(0, Math.max(1, Math.floor(candidateCoords.length * 0.2)));
-  const chosen = rng.pick(pickPool).coord;
+  // Extraction stations appear on depths 3, 6, 9, 12
+  let extractionStation: Coord | undefined;
+  if (depth === 3 || depth === 6 || depth === 9 || depth === 12) {
+    // Select a room distinct from entrance and stairs
+    const candidateRoom =
+      rooms.find(
+        (r) =>
+          (r.centerX !== entrance.x || r.centerY !== entrance.y) &&
+          (r.centerX !== chosenStairs.x || r.centerY !== chosenStairs.y)
+      ) ?? rooms[rooms.length - 1];
 
-  tiles[toIndex(chosen.x, chosen.y, width)] = 'STAIRS_DOWN';
+    // Find open floor tile in this room
+    for (let ry = candidateRoom.y; ry < candidateRoom.y + candidateRoom.h; ry++) {
+      for (let rx = candidateRoom.x; rx < candidateRoom.x + candidateRoom.w; rx++) {
+        const idx = toIndex(rx, ry, width);
+        if (tiles[idx] === 'FLOOR') {
+          tiles[idx] = 'EXTRACTION_STATION';
+          extractionStation = { x: rx, y: ry };
+          break;
+        }
+      }
+      if (extractionStation) break;
+    }
+  }
 
   return {
     width,
     height,
     tiles,
     entrance,
-    stairsDown: chosen,
+    stairsDown: chosenStairs,
+    extractionStation,
     rooms,
   };
 }

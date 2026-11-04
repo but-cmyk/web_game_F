@@ -148,3 +148,5 @@ export class LocalStorageStore implements SaveStore {
   }
 }
 
+export const defaultSaveStore = new LocalStorageStore();
+

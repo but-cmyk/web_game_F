@@ -42,6 +42,12 @@ describe('Turn Resolution Framework', () => {
       movementMode: 'walk',
       turnCount: 0,
       depth: 1,
+      hp: 2,
+      carriedGold: 0,
+      bankedGold: 0,
+      goldPiles: [],
+      isExtracted: false,
+      isDead: false,
       eventBus,
     };
   }

@@ -88,15 +88,15 @@ export class BootScene extends Phaser.Scene {
 
     // Transition on keydown, pointerdown, or auto-delay
     let transitioned = false;
-    const enterRun = () => {
+    const enterGame = () => {
       if (transitioned) return;
       transitioned = true;
-      this.scene.start('RunScene');
+      this.scene.start('MenuScene');
     };
 
-    this.input.keyboard?.once('keydown', enterRun);
-    this.input.once('pointerdown', enterRun);
-    this.time.delayedCall(1200, enterRun);
+    this.input.keyboard?.once('keydown', enterGame);
+    this.input.once('pointerdown', enterGame);
+    this.time.delayedCall(1200, enterGame);
   }
 }
 

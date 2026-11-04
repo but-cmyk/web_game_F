@@ -1,6 +1,7 @@
 {
   "action.accept": "Accept",
   "action.decline": "Decline",
+  "action.descend": "Descend Stairs",
   "action.extract": "Extract & Bank Gold",
   "boot.canvas_info": "320x180 Pixel-Perfect Canvas",
   "boot.palette_title": "PALETTE DEEPER-24",
@@ -9,6 +10,7 @@
   "game.subtitle": "Push-Your-Luck Dungeon Roguelike",
   "game.title": "DEEPER — Into the Dark",
   "game.title_display": "D E E P E R",
+  "hud.carried_gold": "Gold: {gold}",
   "hud.controls_hint": "WASD / ARROWS / SWIPE",
   "hud.depth": "Floor {depth}",
   "hud.dread": "Dread: {dread}",
@@ -17,7 +19,16 @@
   "hud.hp": "HP: {hp}",
   "hud.oil": "Oil: {oil}%",
   "hud.turn": "Turn {turn}",
+  "menu.press_start": "PRESS SPACE OR TAP TO DIVE DEEPER",
   "menu.settings": "Settings",
-  "menu.start": "Start the Run"
+  "menu.start": "Start the Run",
+  "menu.treasury": "Treasury: {gold} Gold",
+  "summary.continue_prompt": "PRESS SPACE OR TAP TO CONTINUE",
+  "summary.depth_reached": "Deepest Floor Reached: Floor {depth}",
+  "summary.gold_banked": "Gold Banked to Vault: +{amount}",
+  "summary.gold_lost": "Gold Lost Forever: -{amount}",
+  "summary.title_died": "PERISHED IN THE DEPTHS",
+  "summary.title_extracted": "SUCCESSFUL EXTRACTION",
+  "summary.total_treasury": "Total Vault Balance: {total} Gold"
 }
 
