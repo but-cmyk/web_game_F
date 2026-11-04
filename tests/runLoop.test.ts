@@ -21,7 +21,11 @@ describe('Single Run Loop & Run Lifecycle', () => {
       hp: 2,
       carriedGold: 0,
       bankedGold: 100, // existing treasury
+      oil: 100,
+      maxOil: 100,
+      dread: 0,
       goldPiles,
+      oilFlasks: [],
       isExtracted: false,
       isDead: false,
       eventBus,

@@ -1,18 +1,21 @@
 /**
  * RunScene for DEEPER.
  * Main roguelike exploration scene: dungeon floor rendering, player movement,
- * gold collection, multi-floor descent, extraction stations, and camera tracking.
+ * fear & oil mechanics, noise waves, gold collection, and camera tracking.
  */
 
 import Phaser from 'phaser';
 import { Rng } from '../core/rng';
 import { generateDungeon, DungeonFloor } from '../core/mapgen';
 import { EventBus } from '../core/events';
-import { TurnResolver, DungeonState, PlayerAction } from '../core/turn';
+import { TurnResolver, DungeonState, PlayerAction, MovementMode } from '../core/turn';
 import { FogOfWar, createFogOfWar, updateFogOfWar, computeFOV } from '../core/fov';
 import { toIndex } from '../core/grid';
-import { spawnGoldPiles } from '../core/loot';
+import { spawnGoldPiles, spawnOilFlasks } from '../core/loot';
+import { calculateLightRadius } from '../core/fear';
 import { DungeonRenderer, TILE_SIZE } from '../views/DungeonRenderer';
+import { PostFX } from '../views/PostFX';
+import { defaultAudioDirector } from '../audio/AudioDirector';
 import { defaultSaveStore } from '../services/SaveStore';
 import { PALETTE, hexToNumber } from '../utils/palette';
 import { t } from '../i18n';
@@ -30,13 +33,16 @@ export class RunScene extends Phaser.Scene {
   private state!: DungeonState;
   private fog!: FogOfWar;
   private dungeonRenderer!: DungeonRenderer;
+  private postFX!: PostFX;
   private playerSprite!: Phaser.GameObjects.Image;
 
   // HUD elements
   private hpText!: Phaser.GameObjects.Text;
+  private oilText!: Phaser.GameObjects.Text;
+  private dreadText!: Phaser.GameObjects.Text;
+  private modeText!: Phaser.GameObjects.Text;
   private goldText!: Phaser.GameObjects.Text;
   private depthText!: Phaser.GameObjects.Text;
-  private turnText!: Phaser.GameObjects.Text;
   private fpsText!: Phaser.GameObjects.Text;
 
   // Touch gesture state
@@ -55,6 +61,7 @@ export class RunScene extends Phaser.Scene {
     this.rng = new Rng(seed);
     this.floor = generateDungeon(this.rng, depth);
     const goldPiles = spawnGoldPiles(this.floor, depth, this.rng);
+    const oilFlasks = spawnOilFlasks(this.floor, depth, this.rng);
     this.eventBus = new EventBus();
 
     this.state = {
@@ -66,7 +73,11 @@ export class RunScene extends Phaser.Scene {
       hp: 2,
       carriedGold: 0,
       bankedGold,
+      oil: 100,
+      maxOil: 100,
+      dread: 0,
       goldPiles,
+      oilFlasks,
       isExtracted: false,
       isDead: false,
       eventBus: this.eventBus,
@@ -74,25 +85,81 @@ export class RunScene extends Phaser.Scene {
 
     this.fog = createFogOfWar(this.floor.width, this.floor.height);
     this.dungeonRenderer = new DungeonRenderer(this, this.floor);
+    const reduceMotion =
+      defaultSaveStore.load().reduceMotion ??
+      (typeof window !== 'undefined' &&
+        window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) ??
+      false;
+    this.postFX = new PostFX(this, reduceMotion);
     this.playerSprite = this.dungeonRenderer.createPlayerSprite(
       this.state.playerPos.x,
       this.state.playerPos.y
     );
 
-    // Initial FOV and gold sync
+    // Initial FOV and entity sync
     this.recomputeFOV();
     this.dungeonRenderer.syncGoldPiles(this.state.goldPiles, this.fog);
+    this.dungeonRenderer.syncOilFlasks(this.state.oilFlasks, this.fog);
 
-    // Setup Camera
+    // Setup presentation, HUD, controls, and audio listeners
     this.setupCamera();
-
-    // Setup HUD
     this.setupHUD();
-
-    // Setup Keyboard & Touch Input
     this.setupInput();
+    this.setupAudioAndEvents();
 
-    // Listen to RunEnded event to transition to SummaryScene
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.postFX.destroy();
+      this.dungeonRenderer.destroy();
+    });
+  }
+
+  private setupCamera(): void {
+    const cam = this.cameras.main;
+    const worldW = this.floor.width * TILE_SIZE;
+    const worldH = this.floor.height * TILE_SIZE;
+
+    cam.setBounds(0, 0, worldW, worldH);
+    cam.startFollow(this.playerSprite, true, 0.15, 0.15);
+    cam.setBackgroundColor(hexToNumber(PALETTE.background));
+  }
+
+  private setupAudioAndEvents(): void {
+    const unlockAudio = () => {
+      defaultAudioDirector.unlock();
+    };
+    this.input.once('pointerdown', unlockAudio);
+    if (this.input.keyboard) {
+      this.input.keyboard.once('keydown', unlockAudio);
+    }
+
+    this.eventBus.on('StepTaken', (payload) => {
+      defaultAudioDirector.playFootstep(payload.mode);
+    });
+
+    this.eventBus.on('GoldPicked', () => {
+      defaultAudioDirector.playGoldChime();
+    });
+
+    this.eventBus.on('OilPicked', () => {
+      defaultAudioDirector.playOilChime();
+    });
+
+    this.eventBus.on('NoiseEmitted', (payload) => {
+      this.postFX.spawnNoiseRipple(
+        payload.x * TILE_SIZE + TILE_SIZE / 2,
+        payload.y * TILE_SIZE + TILE_SIZE / 2,
+        payload.radius
+      );
+    });
+
+    this.eventBus.on('DreadChanged', (payload) => {
+      defaultAudioDirector.updateDread(payload.newDread);
+      this.postFX.updateDread(payload.newDread);
+      if (payload.newDread >= 70 && payload.newDread > payload.oldDread) {
+        this.postFX.triggerHeartbeatPulse();
+      }
+    });
+
     this.eventBus.on('RunEnded', (payload) => {
       const currentSave = defaultSaveStore.load();
       const updatedSave = {
@@ -115,28 +182,18 @@ export class RunScene extends Phaser.Scene {
     });
   }
 
-  private setupCamera(): void {
-    const cam = this.cameras.main;
-    const worldW = this.floor.width * TILE_SIZE;
-    const worldH = this.floor.height * TILE_SIZE;
-
-    cam.setBounds(0, 0, worldW, worldH);
-    cam.startFollow(this.playerSprite, true, 0.15, 0.15);
-    cam.setBackgroundColor(hexToNumber(PALETTE.background));
-  }
-
   private setupHUD(): void {
-    // HUD Top Banner
+    // Top banner panel
     this.add
       .rectangle(0, 0, 320, 14, hexToNumber(PALETTE.background), 0.85)
       .setOrigin(0)
       .setScrollFactor(0)
       .setDepth(100);
 
-    // HP indicator (left)
+    // HP indicator
     this.hpText = this.add
-      .text(8, 3, t('hud.hp', { hp: this.state.hp }).toUpperCase(), {
-        fontSize: '8px',
+      .text(4, 3, t('hud.hp', { hp: this.state.hp }).toUpperCase(), {
+        fontSize: '7px',
         color: PALETTE.danger,
         fontFamily: 'monospace',
         fontStyle: 'bold',
@@ -144,10 +201,49 @@ export class RunScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(101);
 
+    // Oil indicator
+    this.oilText = this.add
+      .text(38, 3, t('hud.oil', { oil: Math.round(this.state.oil) }).toUpperCase(), {
+        fontSize: '7px',
+        color: PALETTE.goldHighlight,
+        fontFamily: 'monospace',
+        fontStyle: 'bold',
+      })
+      .setScrollFactor(0)
+      .setDepth(101);
+
+    // Dread indicator
+    this.dreadText = this.add
+      .text(88, 3, t('hud.dread', { dread: this.state.dread }).toUpperCase(), {
+        fontSize: '7px',
+        color: PALETTE.textDim,
+        fontFamily: 'monospace',
+        fontStyle: 'bold',
+      })
+      .setScrollFactor(0)
+      .setDepth(101);
+
+    // Movement mode indicator (clickable/tappable to cycle modes)
+    const modeKey = `hud.mode_${this.state.movementMode}`;
+    this.modeText = this.add
+      .text(142, 3, t('hud.mode', { mode: t(modeKey) }).toUpperCase(), {
+        fontSize: '7px',
+        color: PALETTE.focus,
+        fontFamily: 'monospace',
+        fontStyle: 'bold',
+      })
+      .setScrollFactor(0)
+      .setDepth(101)
+      .setInteractive({ useHandCursor: true });
+
+    this.modeText.on('pointerdown', () => {
+      this.cycleMovementMode();
+    });
+
     // Carried Gold indicator
     this.goldText = this.add
-      .text(54, 3, t('hud.carried_gold', { gold: this.state.carriedGold }).toUpperCase(), {
-        fontSize: '8px',
+      .text(206, 3, t('hud.carried_gold', { gold: this.state.carriedGold }).toUpperCase(), {
+        fontSize: '7px',
         color: PALETTE.goldHighlight,
         fontFamily: 'monospace',
         fontStyle: 'bold',
@@ -157,8 +253,8 @@ export class RunScene extends Phaser.Scene {
 
     // Depth indicator
     this.depthText = this.add
-      .text(122, 3, t('hud.depth', { depth: this.state.depth }).toUpperCase(), {
-        fontSize: '8px',
+      .text(250, 3, t('hud.depth', { depth: this.state.depth }).toUpperCase(), {
+        fontSize: '7px',
         color: PALETTE.goldAccent,
         fontFamily: 'monospace',
         fontStyle: 'bold',
@@ -166,27 +262,17 @@ export class RunScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(101);
 
-    // Turn indicator
-    this.turnText = this.add
-      .text(182, 3, t('hud.turn', { turn: this.state.turnCount }).toUpperCase(), {
-        fontSize: '8px',
-        color: PALETTE.text,
-        fontFamily: 'monospace',
-      })
-      .setScrollFactor(0)
-      .setDepth(101);
-
-    // FPS counter (upper-right)
+    // FPS counter
     this.fpsText = this.add
-      .text(320 - 46, 3, t('hud.fps', { fps: 60 }), {
-        fontSize: '8px',
-        color: PALETTE.focus,
+      .text(288, 3, t('hud.fps', { fps: 60 }), {
+        fontSize: '7px',
+        color: PALETTE.textDim,
         fontFamily: 'monospace',
       })
       .setScrollFactor(0)
       .setDepth(101);
 
-    // Mobile / Keyboard Hint (lower center, subtle)
+    // Controls Hint (bottom center)
     this.add
       .text(160, 172, t('hud.controls_hint'), {
         fontSize: '7px',
@@ -198,15 +284,44 @@ export class RunScene extends Phaser.Scene {
       .setDepth(101);
   }
 
+  private cycleMovementMode(): void {
+    const nextMode: Record<MovementMode, MovementMode> = {
+      sneak: 'walk',
+      walk: 'run',
+      run: 'sneak',
+    };
+    this.stepAction({ type: 'SET_MODE', mode: nextMode[this.state.movementMode] });
+  }
+
   private updateHUD(): void {
     this.hpText.setText(t('hud.hp', { hp: this.state.hp }).toUpperCase());
+
+    const oilVal = Math.max(0, Math.round(this.state.oil));
+    this.oilText.setText(t('hud.oil', { oil: oilVal }).toUpperCase());
+    if (oilVal <= 20) {
+      this.oilText.setColor(PALETTE.danger);
+    } else if (oilVal <= 50) {
+      this.oilText.setColor(PALETTE.goldAccent);
+    } else {
+      this.oilText.setColor(PALETTE.goldHighlight);
+    }
+
+    this.dreadText.setText(t('hud.dread', { dread: this.state.dread }).toUpperCase());
+    if (this.state.dread >= 70) {
+      this.dreadText.setColor(PALETTE.danger);
+    } else if (this.state.dread >= 40) {
+      this.dreadText.setColor(PALETTE.goldAccent);
+    } else {
+      this.dreadText.setColor(PALETTE.textDim);
+    }
+
+    const modeKey = `hud.mode_${this.state.movementMode}`;
+    this.modeText.setText(t('hud.mode', { mode: t(modeKey) }).toUpperCase());
     this.goldText.setText(t('hud.carried_gold', { gold: this.state.carriedGold }).toUpperCase());
     this.depthText.setText(t('hud.depth', { depth: this.state.depth }).toUpperCase());
-    this.turnText.setText(t('hud.turn', { turn: this.state.turnCount }).toUpperCase());
   }
 
   private setupInput(): void {
-    // Keyboard listener
     if (this.input.keyboard) {
       this.input.keyboard.on('keydown', (event: KeyboardEvent) => {
         let action: PlayerAction | null = null;
@@ -227,6 +342,19 @@ export class RunScene extends Phaser.Scene {
           case 'ArrowRight':
             action = { type: 'MOVE', direction: 'E' };
             break;
+          case 'KeyZ':
+            action = { type: 'SET_MODE', mode: 'sneak' };
+            break;
+          case 'KeyX':
+            action = { type: 'SET_MODE', mode: 'walk' };
+            break;
+          case 'KeyC':
+            action = { type: 'SET_MODE', mode: 'run' };
+            break;
+          case 'ShiftLeft':
+          case 'ShiftRight':
+            this.cycleMovementMode();
+            return;
           case 'Space':
           case 'Numpad5': {
             const isAtStairs =
@@ -266,7 +394,6 @@ export class RunScene extends Phaser.Scene {
       const dy = pointer.y - this.pointerDownY;
       const dist = Math.hypot(dx, dy);
 
-      // Swipe detection threshold: 20 pixels
       if (dist >= 20) {
         let action: PlayerAction | null = null;
         if (Math.abs(dx) > Math.abs(dy)) {
@@ -276,7 +403,6 @@ export class RunScene extends Phaser.Scene {
         }
         this.stepAction(action);
       } else {
-        // Tap on player or current tile: check if stairs or extraction station
         const isAtStairs =
           this.state.playerPos.x === this.floor.stairsDown.x &&
           this.state.playerPos.y === this.floor.stairsDown.y;
@@ -307,8 +433,9 @@ export class RunScene extends Phaser.Scene {
       this.dungeonRenderer.updatePlayerPosition(this.state.playerPos.x, this.state.playerPos.y);
       this.recomputeFOV();
       this.dungeonRenderer.syncGoldPiles(this.state.goldPiles, this.fog);
-      this.updateHUD();
+      this.dungeonRenderer.syncOilFlasks(this.state.oilFlasks, this.fog);
     }
+    this.updateHUD();
   }
 
   public advanceToNextFloor(): void {
@@ -318,6 +445,7 @@ export class RunScene extends Phaser.Scene {
     this.state.floor = this.floor;
     this.state.playerPos = { ...this.floor.entrance };
     this.state.goldPiles = spawnGoldPiles(this.floor, this.state.depth, this.rng);
+    this.state.oilFlasks = spawnOilFlasks(this.floor, this.state.depth, this.rng);
 
     this.fog = createFogOfWar(this.floor.width, this.floor.height);
     this.dungeonRenderer.destroy();
@@ -330,11 +458,12 @@ export class RunScene extends Phaser.Scene {
     this.setupCamera();
     this.recomputeFOV();
     this.dungeonRenderer.syncGoldPiles(this.state.goldPiles, this.fog);
+    this.dungeonRenderer.syncOilFlasks(this.state.oilFlasks, this.fog);
     this.updateHUD();
   }
 
   private recomputeFOV(): void {
-    const radius = 5; // Base lantern radius for M2/M3
+    const radius = calculateLightRadius(this.state.oil, this.state.maxOil, this.state.dread);
     const isOpaque = (c: { x: number; y: number }) => {
       const idx = toIndex(c.x, c.y, this.floor.width);
       return this.floor.tiles[idx] === 'WALL';
@@ -357,9 +486,6 @@ export class RunScene extends Phaser.Scene {
     this.fpsText.setText(t('hud.fps', { fps }));
   }
 
-  /**
-   * Helper accessor for integration / smoke testing.
-   */
   public getState(): Readonly<DungeonState> {
     return this.state;
   }

@@ -12,6 +12,7 @@ export interface GameSave {
   readonly runsCompleted: number;
   readonly deaths: number;
   readonly lastPlayedDate?: string;
+  readonly reduceMotion?: boolean;
 }
 
 export const CURRENT_SAVE_VERSION = 1;
@@ -112,6 +113,7 @@ export class LocalStorageStore implements SaveStore {
         runsCompleted: typeof parsed.runsCompleted === 'number' ? parsed.runsCompleted : 0,
         deaths: typeof parsed.deaths === 'number' ? parsed.deaths : 0,
         lastPlayedDate: typeof parsed.lastPlayedDate === 'string' ? parsed.lastPlayedDate : undefined,
+        reduceMotion: typeof parsed.reduceMotion === 'boolean' ? parsed.reduceMotion : undefined,
       };
     } catch {
       this.isFallback = true;
