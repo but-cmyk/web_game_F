@@ -158,3 +158,4 @@ describe('Escape Rope Channeling Mechanics (§4.7)', () => {
     expect(state.isExtracted).toBe(false);
   });
 });
+

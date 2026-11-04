@@ -226,3 +226,4 @@ export class CodexScene extends Phaser.Scene {
     this.scene.start('MenuScene');
   }
 }
+

@@ -85,3 +85,4 @@ export function applyFloorTransitionCurses(
   }
   return dread;
 }
+
