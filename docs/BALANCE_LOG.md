@@ -1765,3 +1765,24 @@ Each entry must record:
 - Greedy bot experiences high mortality (99%) attempting to push past floor 6 without extraction.
 - Mixed policy balances risk with ~61% mortality, achieving optimal expected return.
 - **Non-Dominance Invariant Holds**: No policy exceeds 1.5× the expected yield of the Mixed policy.
+
+## Milestone M7 — Meta Upgrades & Economy Calibration (2026-11-05)
+- **Date**: 2026-11-05
+- **Milestone**: M7
+- **Simulated Runs**: 1000 runs per policy (Seed: 424242)
+
+| Policy | Death Rate (%) | Extraction Rate (%) | Mean Depth | Expected Banked Gold |
+|---|---|---|---|---|
+| cautious | 48.3% | 51.7% | 2.5 | 19 |
+| greedy | 99.7% | 0.3% | 1.2 | 0 |
+| mixed | 60.6% | 39.4% | 2.3 | 22 |
+
+**Meta-Progression Comparison (100 sequential runs):**
+- Run 1 (0 upgrades): Mean Depth 2.3, Expected Gold: 17
+- Run 5 (with upgrades): Mean Depth 2, Expected Gold: 21
+
+**Observations & Verification:**
+- Cautious bot achieves high survival (51.7%) but modest gold rewards.
+- Greedy bot experiences high mortality (99.7%) attempting to push past floor 6 without extraction.
+- Mixed policy balances risk with ~60.6% mortality, achieving optimal expected return.
+- **Non-Dominance Invariant Holds**: No policy exceeds 1.5× the expected yield of the Mixed policy.

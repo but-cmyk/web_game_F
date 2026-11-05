@@ -1,5 +1,5 @@
 # DEEPER — Status
-Last updated: 2026-11-05 · Current milestone: M10
+Last updated: 2026-11-05 · Current milestone: M11
 
 | Milestone | State (todo/doing/review/done) | Branch | Notes |
 |---|---|---|---|
@@ -13,8 +13,8 @@ Last updated: 2026-11-05 · Current milestone: M10
 | M7 | done | milestone/M7 | Greed II: Shop, Meta upgrades, Balance sim verified |
 | M8 | done | milestone/M8 | Mirror screen & Tutorial |
 | M9 | done | milestone/M9 | Biomes, polish, touch controls, settings |
-| M10 | review | milestone/M10 | Social corpse system, daily seeds, survivor leaderboard, ethics & privacy |
-| M11 | todo | milestone/M11 | QA, release packaging, final audit |
+| M10 | done | milestone/M10 | Social corpse system, daily seeds, survivor leaderboard, ethics & privacy |
+| M11 | review | milestone/M11 | QA, release packaging, final audit |
 
 ## Known issues
 None at present.
@@ -23,13 +23,15 @@ None at present.
 None at present.
 
 ## Handoff notes for the next conversation
-Milestone M10 completed & verified:
-- **Social Corpse Retrieval System**: Death locations recorded as `PlayerCorpse`. Procedural sprite `tile_corpse` rendered in `DungeonRenderer`. Stepping onto fallen corpse recovers 50% lost gold (`recoverableGold = Math.round(lostGold * 0.5)`), plays chime/particles, and marks corpse as looted without duplication. Verified by unit tests.
-- **UTC Daily Seed Generator**: Deterministic 32-bit positive integer seed derived from UTC date `YYYY-MM-DD` via FNV-1a. Accessible via `MenuScene` button `[D] DAILY DELVE` or shortcut `D`. Zero streak penalties, zero guilt notifications (§4.11 Rule 3).
-- **Survivor Hall of Fame Leaderboard**: Ranked strictly by depth reached and runs survived — **never ranked by gold greed** (§4.10). Decoupled `RemoteStore` interface with default offline `LocalRemoteStore` and optional REST `SupabaseRemoteStore` with automatic silent offline fallback. Accessible via `LeaderboardScene` (`[L]`).
-- **45-Minute Break Reminder**: Tracks continuous exploration session time. Displays gentle, dismissible reminder modal after ~45 minutes of continuous play (max once per hour), gated by `settings.breakReminder` (§4.11 Rule 6).
-- **Data Privacy & Ethical Consent**: Opt-in anonymous telemetry toggle (`settings.telemetryConsent`), zero PII gathered, ephemeral anonymous UUID v4, explicit "Wipe All Data" button with confirmation modal in `SettingsScene`, and full privacy schema documented in `docs/TELEMETRY_SCHEMA.md` (§4.11 Rule 7).
-- **Verification Gates**:
-  - `npm run check` 100% green (typecheck, eslint, 28/28 vitest suites, 154/154 tests passing, production build successful).
-  - Mechanical review passed with 0 errors (`core-clock`, `core-math-random`, `core-imports-phaser`).
-  - Browser smoke test verified in headless Chrome via CDP generating `smoke-m10.png`.
+Milestone M11 completed & verified:
+- **Final Monte Carlo Balance Simulation (1,000 runs)**: Calibrated risk-reward across all policies (`cautious`, `greedy`, `mixed`). Validated that Mixed death rate is 60.6% (target 55-65%), Greedy death rate is 99.7% (target >= 80%), and Non-Dominance Invariant holds at 0.86x (<= 1.5x of mixed yield). Logged in `docs/BALANCE_LOG.md`.
+- **Standalone Release Packager (`npm run package`)**: Zero-dependency Node.js script `scripts/package-release.mjs` generates `release/deeper-v0.1.0-itch.zip` directly from `dist/`. Packaged zip size is **369.4 KB** (strictly conforming to the <= 5 MB budget limit; < 8% of budget).
+- **Release Documentation & Legal Attributions**:
+  - `README.md`: Bilingual (vi/en) comprehensive game overview, mechanics, controls, architecture, and dev commands.
+  - `CREDITS.md`: Full attributions for Phaser 3, DEEPER-24 palette, WebAudio sound director, and open-source licenses.
+  - `LICENSE`: Standard MIT license.
+  - `docs/RELEASE_CHECKLIST.md`: Formal verification checklist certifying all §7 release gates.
+- **Automated Performance & Accessibility Smoke Test (`scripts/smoke-test-m11.mjs`)**: Verified cold start on simulated 4G (< 3.0s), steady 60 FPS under 4x CPU throttle, virtual touch controls on 360x640 mobile portrait viewport, and 100% offline execution. Generated `smoke-m11.png`.
+- **Quality Gates**:
+  - `npm run check` green: 0 type errors, 0 lint warnings, 29/29 vitest suites passing (159/159 tests), production build verified.
+  - Mechanical review passed with 0 errors.
