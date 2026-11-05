@@ -27,6 +27,9 @@ import { applyUpgradesToState } from '../core/upgrades';
 import { calculateGreedFearMetrics, RunMirrorMetric, RawDecisionCounts } from '../core/mirror';
 import { DungeonRenderer, TILE_SIZE } from '../views/DungeonRenderer';
 import { PostFX } from '../views/PostFX';
+import { TouchControls } from '../views/TouchControls';
+import eventsData from '../data/events.json';
+import { DungeonSideEvent, rollSideEvent } from '../core/events';
 import { defaultAudioDirector } from '../audio/AudioDirector';
 import { defaultSaveStore } from '../services/SaveStore';
 import { PALETTE, hexToNumber } from '../utils/palette';
@@ -47,6 +50,8 @@ export class RunScene extends Phaser.Scene {
   private dungeonRenderer!: DungeonRenderer;
   private postFX!: PostFX;
   private playerSprite!: Phaser.GameObjects.Image;
+  private touchControls!: TouchControls;
+  private visitedTiles: Set<number> = new Set();
 
   // HUD elements
   private hpText!: Phaser.GameObjects.Text;
@@ -120,9 +125,10 @@ export class RunScene extends Phaser.Scene {
     applyUpgradesToState(this.state, this.state.upgrades ?? {});
 
     this.fog = createFogOfWar(this.floor.width, this.floor.height);
-    this.dungeonRenderer = new DungeonRenderer(this, this.floor);
+    this.dungeonRenderer = new DungeonRenderer(this, this.floor, this.state.depth);
     const reduceMotion =
-      defaultSaveStore.load().reduceMotion ??
+      save.settings?.reduceShake ??
+      save.reduceMotion ??
       (typeof window !== 'undefined' &&
         window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) ??
       false;
@@ -147,8 +153,20 @@ export class RunScene extends Phaser.Scene {
     this.setupInput();
     this.setupAudioAndEvents();
 
+    // Virtual Touch Controls (§5 M9)
+    this.touchControls = new TouchControls(this, {
+      onMove: (dir) => {
+        this.stepAction({ type: 'MOVE', direction: dir });
+      },
+      onMode: (mode) => {
+        this.stepAction({ type: 'SET_MODE', mode });
+        this.touchControls.setActiveMode(mode);
+      },
+    });
+
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.closeModal();
+      this.touchControls?.destroy();
       this.postFX.destroy();
       this.dungeonRenderer.destroy();
     });
@@ -177,8 +195,9 @@ export class RunScene extends Phaser.Scene {
       defaultAudioDirector.playFootstep(payload.mode);
     });
 
-    this.eventBus.on('GoldPicked', () => {
+    this.eventBus.on('GoldPicked', (payload) => {
       defaultAudioDirector.playGoldChime();
+      this.dungeonRenderer.spawnGoldParticles(payload.x, payload.y);
     });
 
     this.eventBus.on('OilPicked', () => {
@@ -189,8 +208,9 @@ export class RunScene extends Phaser.Scene {
       defaultAudioDirector.playGoldChime();
       if (payload.isCursed) {
         this.postFX.triggerHeartbeatPulse();
-        const reduceMotion = defaultSaveStore.load().reduceMotion;
-        if (!reduceMotion) {
+        const save = defaultSaveStore.load();
+        const disableShake = save.settings?.reduceShake ?? save.reduceMotion ?? false;
+        if (!disableShake) {
           this.cameras.main.shake(120, 0.005);
         }
       }
@@ -236,9 +256,13 @@ export class RunScene extends Phaser.Scene {
 
     this.eventBus.on('MonsterAttacked', () => {
       defaultAudioDirector.playPlayerHurt();
-      const reduceMotion = defaultSaveStore.load().reduceMotion;
-      if (!reduceMotion) {
+      const save = defaultSaveStore.load();
+      const disableShake = save.settings?.reduceShake ?? save.reduceMotion ?? false;
+      if (!disableShake) {
         this.cameras.main.shake(120, 0.008);
+      }
+      if (!save.settings?.reduceFlash) {
+        this.cameras.main.flash(60, 220, 40, 40, false);
       }
       this.tweens.add({
         targets: this.playerSprite,
@@ -664,6 +688,18 @@ export class RunScene extends Phaser.Scene {
       this.dungeonRenderer.syncMonsters(this.state.monsters ?? [], this.fog);
       this.dungeonRenderer.syncHallucinations(this.state.hallucinations ?? [], this.fog);
 
+      // Check side event roll on unvisited tile (8% chance)
+      if (action.type === 'MOVE') {
+        const currentIdx = toIndex(this.state.playerPos.x, this.state.playerPos.y, this.floor.width);
+        if (!this.visitedTiles.has(currentIdx)) {
+          this.visitedTiles.add(currentIdx);
+          if (this.rng.next() < 0.08) {
+            const evt = rollSideEvent(this.rng, eventsData.events as DungeonSideEvent[]);
+            this.triggerSideEvent(evt);
+          }
+        }
+      }
+
       // Check auto-interaction if stepped onto chest or altar
       const chestAtPos = this.state.chests?.find(
         (c) => !c.isOpen && c.x === this.state.playerPos.x && c.y === this.state.playerPos.y
@@ -974,6 +1010,49 @@ export class RunScene extends Phaser.Scene {
   override update(): void {
     const fps = Math.round(this.game.loop.actualFps);
     this.fpsText.setText(t('hud.fps', { fps }));
+  }
+
+  private triggerSideEvent(evt: DungeonSideEvent): void {
+    if (evt.bonus_gold) {
+      defaultAudioDirector.playGoldChime();
+      this.state.carriedGold += evt.bonus_gold;
+    }
+    if (evt.oil_delta) {
+      defaultAudioDirector.playOilChime();
+      this.state.oil = Math.min(this.state.maxOil, Math.max(0, this.state.oil + evt.oil_delta));
+    }
+    if (evt.dread_delta) {
+      this.state.dread = Math.min(100, Math.max(0, this.state.dread + evt.dread_delta));
+    }
+    if (evt.heal_hp) {
+      this.state.hp = Math.min(2, this.state.hp + evt.heal_hp);
+    }
+    this.updateHUD();
+    this.showEventToast(evt);
+  }
+
+  private showEventToast(evt: DungeonSideEvent): void {
+    const { width } = this.scale;
+    const toast = this.add
+      .text(width / 2, 28, `${t(evt.name_key)}: ${t(evt.desc_key)}`, {
+        fontSize: '6.5px',
+        color: PALETTE.goldHighlight,
+        fontFamily: 'monospace',
+        backgroundColor: '#161311ee',
+        padding: { x: 4, y: 2 },
+      })
+      .setScrollFactor(0)
+      .setDepth(250)
+      .setOrigin(0.5);
+
+    this.tweens.add({
+      targets: toast,
+      alpha: 0,
+      y: 20,
+      delay: 1500,
+      duration: 500,
+      onComplete: () => toast.destroy(),
+    });
   }
 
   public getState(): Readonly<DungeonState> {

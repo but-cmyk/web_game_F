@@ -7,6 +7,26 @@
 
 import { RunMirrorMetric } from '../core/mirror';
 
+export interface GameSettings {
+  readonly masterVolume: number;
+  readonly sfxVolume: number;
+  readonly ambientVolume: number;
+  readonly reduceFlash: boolean;
+  readonly reduceShake: boolean;
+  readonly highContrast: boolean;
+  readonly language: 'vi' | 'en';
+}
+
+export const DEFAULT_SETTINGS: GameSettings = {
+  masterVolume: 0.8,
+  sfxVolume: 0.8,
+  ambientVolume: 0.8,
+  reduceFlash: false,
+  reduceShake: false,
+  highContrast: false,
+  language: 'vi',
+};
+
 export interface GameSave {
   readonly version: number;
   readonly bankedGold: number;
@@ -17,6 +37,7 @@ export interface GameSave {
   readonly reduceMotion?: boolean;
   readonly recentRunMetrics?: ReadonlyArray<RunMirrorMetric>;
   readonly hasCompletedTutorial?: boolean;
+  readonly settings?: GameSettings;
 }
 
 export const CURRENT_SAVE_VERSION = 1;
@@ -29,6 +50,7 @@ export const DEFAULT_SAVE: GameSave = {
   deaths: 0,
   recentRunMetrics: [],
   hasCompletedTutorial: false,
+  settings: DEFAULT_SETTINGS,
 };
 
 export interface SaveStore {

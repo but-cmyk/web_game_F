@@ -95,6 +95,43 @@ export interface ExtractStartedEvent {
 }
 
 import { RawDecisionCounts } from './mirror';
+import { Rng } from './rng';
+
+export interface DungeonSideEvent {
+  readonly id: string;
+  readonly name_key: string;
+  readonly desc_key: string;
+  readonly weight: number;
+  readonly dread_delta?: number;
+  readonly oil_delta?: number;
+  readonly bonus_gold?: number;
+  readonly heal_hp?: number;
+  readonly noise_radius?: number;
+}
+
+export interface SideEventTriggeredEvent {
+  readonly event: DungeonSideEvent;
+  readonly x: number;
+  readonly y: number;
+}
+
+export function rollSideEvent(
+  rng: Rng,
+  events: readonly DungeonSideEvent[]
+): DungeonSideEvent {
+  if (events.length === 0) {
+    throw new Error('rollSideEvent: events array cannot be empty');
+  }
+  const totalWeight = events.reduce((sum, e) => sum + e.weight, 0);
+  let roll = rng.next() * totalWeight;
+  for (const event of events) {
+    if (roll < event.weight) {
+      return event;
+    }
+    roll -= event.weight;
+  }
+  return events[events.length - 1];
+}
 
 export interface RunEndedEvent {
   readonly outcome: 'extracted' | 'died';
@@ -119,6 +156,7 @@ export interface GameEventMap {
   BargainOffered: BargainOfferedEvent;
   BargainResolved: BargainResolvedEvent;
   ExtractStarted: ExtractStartedEvent;
+  SideEventTriggered: SideEventTriggeredEvent;
   RunEnded: RunEndedEvent;
 }
 

@@ -66,3 +66,35 @@ describe('Typed EventBus', () => {
   });
 });
 
+import eventsData from '../src/data/events.json';
+import { rollSideEvent, DungeonSideEvent } from '../src/core/events';
+import { Rng } from '../src/core/rng';
+
+describe('Side Events System (§5 M9)', () => {
+  const events = eventsData.events as DungeonSideEvent[];
+
+  it('contains at least 10 distinct side events', () => {
+    expect(events.length).toBeGreaterThanOrEqual(10);
+    const ids = new Set(events.map((e) => e.id));
+    expect(ids.size).toBe(events.length);
+  });
+
+  it('has valid positive weights and localization keys for all events', () => {
+    for (const evt of events) {
+      expect(evt.weight).toBeGreaterThan(0);
+      expect(evt.name_key.startsWith('event.')).toBe(true);
+      expect(evt.desc_key.startsWith('event.')).toBe(true);
+    }
+  });
+
+  it('rolls events deterministically with seeded Rng', () => {
+    const rng1 = new Rng(98765);
+    const rolled1 = rollSideEvent(rng1, events);
+
+    const rng2 = new Rng(98765);
+    const rolled2 = rollSideEvent(rng2, events);
+
+    expect(rolled1.id).toBe(rolled2.id);
+  });
+});
+

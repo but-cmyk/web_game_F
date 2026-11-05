@@ -12,6 +12,7 @@
       "name_key": "event.abandoned_torch.name",
       "desc_key": "event.abandoned_torch.desc",
       "dread_delta": -10,
+      "oil_delta": 15,
       "weight": 15
     },
     {
@@ -19,15 +20,59 @@
       "name_key": "event.distant_groan.name",
       "desc_key": "event.distant_groan.desc",
       "dread_delta": 8,
-      "weight": 25
+      "weight": 20
     },
     {
       "id": "gold_glimmer",
       "name_key": "event.gold_glimmer.name",
       "desc_key": "event.gold_glimmer.desc",
-      "bonus_gold": 20,
+      "bonus_gold": 25,
       "weight": 15
+    },
+    {
+      "id": "ancient_shrine",
+      "name_key": "event.ancient_shrine.name",
+      "desc_key": "event.ancient_shrine.desc",
+      "heal_hp": 1,
+      "dread_delta": -5,
+      "weight": 10
+    },
+    {
+      "id": "crumbling_wall",
+      "name_key": "event.crumbling_wall.name",
+      "desc_key": "event.crumbling_wall.desc",
+      "dread_delta": 6,
+      "noise_radius": 5,
+      "weight": 15
+    },
+    {
+      "id": "whispering_well",
+      "name_key": "event.whispering_well.name",
+      "desc_key": "event.whispering_well.desc",
+      "dread_delta": 10,
+      "bonus_gold": 40,
+      "weight": 12
+    },
+    {
+      "id": "rusted_lockbox",
+      "name_key": "event.rusted_lockbox.name",
+      "desc_key": "event.rusted_lockbox.desc",
+      "bonus_gold": 30,
+      "weight": 15
+    },
+    {
+      "id": "oily_puddle",
+      "name_key": "event.oily_puddle.name",
+      "desc_key": "event.oily_puddle.desc",
+      "oil_delta": 20,
+      "weight": 18
+    },
+    {
+      "id": "ghostly_murmur",
+      "name_key": "event.ghostly_murmur.name",
+      "desc_key": "event.ghostly_murmur.desc",
+      "dread_delta": 12,
+      "weight": 10
     }
   ]
 }
-

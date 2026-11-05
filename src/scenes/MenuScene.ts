@@ -56,6 +56,17 @@ export class MenuScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
+    // Settings Button (Top-Right)
+    const settingsBtn = this.add
+      .text(width - 34, 12, t('menu.settings_btn').toUpperCase(), {
+        fontSize: '6.5px',
+        color: PALETTE.textDim,
+        fontFamily: 'monospace',
+        fontStyle: 'bold',
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
     // Nav Buttons Row 1 (y = 106)
     const btnY1 = 106;
 
@@ -182,10 +193,17 @@ export class MenuScene extends Phaser.Scene {
       this.scene.start('TutorialScene');
     };
 
+    const openSettings = () => {
+      if (transitioning) return;
+      transitioning = true;
+      this.scene.start('SettingsScene');
+    };
+
     codexBtn.on('pointerdown', () => openCodex());
     shopBtn.on('pointerdown', () => openShop());
     mirrorBtn.on('pointerdown', () => openMirror());
     tutorialBtn.on('pointerdown', () => openTutorial());
+    settingsBtn.on('pointerdown', () => openSettings());
 
     // Keyboard controls
     this.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
@@ -198,6 +216,8 @@ export class MenuScene extends Phaser.Scene {
         openMirror();
       } else if (event.key === 't' || event.key === 'T') {
         openTutorial();
+      } else if (event.key === 'o' || event.key === 'O') {
+        openSettings();
       } else if (event.key === ' ' || event.key === 'Enter') {
         startRun();
       }
@@ -210,7 +230,8 @@ export class MenuScene extends Phaser.Scene {
         currentlyOver.includes(codexBtn) ||
         currentlyOver.includes(shopBtn) ||
         currentlyOver.includes(mirrorBtn) ||
-        currentlyOver.includes(tutorialBtn)
+        currentlyOver.includes(tutorialBtn) ||
+        currentlyOver.includes(settingsBtn)
       )
         return;
       startRun();

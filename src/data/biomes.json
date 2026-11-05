@@ -7,7 +7,9 @@
       "start_depth": 1,
       "end_depth": 4,
       "ambient_color": "#241e1a",
-      "accent_color": "#f4d06f"
+      "accent_color": "#f4d06f",
+      "wall_tint": "#8c7e72",
+      "floor_tint": "#3f3833"
     },
     {
       "id": "fungal_cavern",
@@ -16,7 +18,9 @@
       "start_depth": 5,
       "end_depth": 8,
       "ambient_color": "#183a2b",
-      "accent_color": "#7bc48c"
+      "accent_color": "#7bc48c",
+      "wall_tint": "#3f634d",
+      "floor_tint": "#1c382b"
     },
     {
       "id": "abyssal_trench",
@@ -25,7 +29,9 @@
       "start_depth": 9,
       "end_depth": 12,
       "ambient_color": "#1a1429",
-      "accent_color": "#7456b8"
+      "accent_color": "#7456b8",
+      "wall_tint": "#3a3459",
+      "floor_tint": "#1b1830"
     }
   ]
 }

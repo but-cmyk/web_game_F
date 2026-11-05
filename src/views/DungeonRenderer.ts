@@ -12,6 +12,7 @@ import { toIndex } from '../core/grid';
 import { GoldPile, OilFlask, Chest, BargainPedestal } from '../core/loot';
 import { Monster } from '../core/monsters';
 import { Hallucination } from '../core/hallucinations';
+import { BiomeDefinition, getBiomeForDepth } from '../core/biomes';
 import { DEEPER_24, PALETTE, hexToNumber } from '../utils/palette';
 
 export const TILE_SIZE = 16;
@@ -19,6 +20,7 @@ export const TILE_SIZE = 16;
 export class DungeonRenderer {
   private scene: Phaser.Scene;
   private floor: DungeonFloor;
+  private biome: BiomeDefinition;
   private tileImages: Phaser.GameObjects.Image[] = [];
   private goldImages: Map<string, Phaser.GameObjects.Image> = new Map();
   private flaskImages: Map<string, Phaser.GameObjects.Image> = new Map();
@@ -29,12 +31,17 @@ export class DungeonRenderer {
   private hallucinationImages: Map<string, Phaser.GameObjects.Image> = new Map();
   private playerSprite: Phaser.GameObjects.Image | null = null;
 
-  constructor(scene: Phaser.Scene, floor: DungeonFloor) {
+  constructor(scene: Phaser.Scene, floor: DungeonFloor, depth: number = 1) {
     this.scene = scene;
     this.floor = floor;
+    this.biome = getBiomeForDepth(depth);
 
     this.ensureProceduralTextures();
     this.createDungeonGrid();
+  }
+
+  public setDepth(depth: number): void {
+    this.biome = getBiomeForDepth(depth);
   }
 
   /**
@@ -604,7 +611,13 @@ export class DungeonRenderer {
       if (fog.visible[i]) {
         img.setVisible(true);
         img.setAlpha(1.0);
-        img.clearTint();
+        if (this.floor.tiles[i] === 'WALL' && this.biome.wall_tint) {
+          img.setTint(hexToNumber(this.biome.wall_tint));
+        } else if (this.floor.tiles[i] === 'FLOOR' && this.biome.floor_tint) {
+          img.setTint(hexToNumber(this.biome.floor_tint));
+        } else {
+          img.clearTint();
+        }
       } else if (fog.explored[i]) {
         img.setVisible(true);
         img.setAlpha(0.35);
@@ -1009,6 +1022,32 @@ export class DungeonRenderer {
     if (this.playerSprite) {
       this.playerSprite.destroy();
       this.playerSprite = null;
+    }
+  }
+
+  /**
+   * Spawns bounded gold particle burst (§5 M9).
+   * Capped to 8 particles to strictly respect the 60 FPS performance budget.
+   */
+  public spawnGoldParticles(tileX: number, tileY: number): void {
+    const pixelX = tileX * TILE_SIZE + TILE_SIZE / 2;
+    const pixelY = tileY * TILE_SIZE + TILE_SIZE / 2;
+    const count = 8;
+    for (let i = 0; i < count; i++) {
+      const p = this.scene.add.rectangle(pixelX, pixelY, 2, 2, hexToNumber(PALETTE.goldHighlight));
+      p.setDepth(150);
+      const angle = (Math.PI * 2 * i) / count;
+      const speed = Phaser.Math.Between(15, 30);
+      this.scene.tweens.add({
+        targets: p,
+        x: pixelX + Math.cos(angle) * speed,
+        y: pixelY + Math.sin(angle) * speed - 5,
+        alpha: 0,
+        scale: 0.5,
+        duration: 350,
+        ease: 'Cubic.easeOut',
+        onComplete: () => p.destroy(),
+      });
     }
   }
 }
