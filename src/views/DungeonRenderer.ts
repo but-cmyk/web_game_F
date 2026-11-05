@@ -13,6 +13,7 @@ import { GoldPile, OilFlask, Chest, BargainPedestal } from '../core/loot';
 import { Monster } from '../core/monsters';
 import { Hallucination } from '../core/hallucinations';
 import { BiomeDefinition, getBiomeForDepth } from '../core/biomes';
+import { PlayerCorpse } from '../core/corpse';
 import { DEEPER_24, PALETTE, hexToNumber } from '../utils/palette';
 
 export const TILE_SIZE = 16;
@@ -25,6 +26,7 @@ export class DungeonRenderer {
   private goldImages: Map<string, Phaser.GameObjects.Image> = new Map();
   private flaskImages: Map<string, Phaser.GameObjects.Image> = new Map();
   private chestImages: Map<string, Phaser.GameObjects.Image> = new Map();
+  private corpseImages: Map<string, Phaser.GameObjects.Image> = new Map();
   private pedestalImage: Phaser.GameObjects.Image | null = null;
   private monsterImages: Map<string, Phaser.GameObjects.Image> = new Map();
   private monsterOverheads: Map<string, Phaser.GameObjects.Image> = new Map();
@@ -77,6 +79,9 @@ export class DungeonRenderer {
     }
     if (!this.scene.textures.exists('tile_bargain_altar')) {
       this.generateBargainAltarTexture();
+    }
+    if (!this.scene.textures.exists('tile_corpse')) {
+      this.generateCorpseTexture();
     }
     if (!this.scene.textures.exists('spr_crawler')) {
       this.generateCrawlerTexture();
@@ -404,6 +409,35 @@ export class DungeonRenderer {
     canvas.refresh();
   }
 
+  private generateCorpseTexture(): void {
+    const canvas = this.scene.textures.createCanvas('tile_corpse', TILE_SIZE, TILE_SIZE);
+    if (!canvas) return;
+    const ctx = canvas.context;
+    ctx.clearRect(0, 0, TILE_SIZE, TILE_SIZE);
+
+    // Old adventurer rags / bones (#352d27 & #4a3e35)
+    ctx.fillStyle = DEEPER_24[3];
+    ctx.fillRect(3, 9, 10, 4);
+    ctx.fillStyle = DEEPER_24[4];
+    ctx.fillRect(4, 8, 8, 3);
+
+    // Ash bone skull (#9c9589)
+    ctx.fillStyle = DEEPER_24[7];
+    ctx.fillRect(5, 5, 4, 4);
+    // Dark hollow eye sockets (#161311)
+    ctx.fillStyle = DEEPER_24[1];
+    ctx.fillRect(6, 6, 1, 1);
+    ctx.fillRect(8, 6, 1, 1);
+
+    // Lost gold pouch gleam (#f4d06f & #fff1b0)
+    ctx.fillStyle = DEEPER_24[12];
+    ctx.fillRect(10, 10, 3, 3);
+    ctx.fillStyle = DEEPER_24[13];
+    ctx.fillRect(11, 10, 1, 1);
+
+    canvas.refresh();
+  }
+
   private generateCrawlerTexture(): void {
     const canvas = this.scene.textures.createCanvas('spr_crawler', TILE_SIZE, TILE_SIZE);
     if (!canvas) return;
@@ -703,6 +737,25 @@ export class DungeonRenderer {
       }
     }
 
+    // Update corpse lighting
+    for (const img of this.corpseImages.values()) {
+      const x = Math.floor(img.x / TILE_SIZE);
+      const y = Math.floor(img.y / TILE_SIZE);
+      const idx = toIndex(x, y, this.floor.width);
+
+      if (fog.visible[idx]) {
+        img.setVisible(true);
+        img.setAlpha(1.0);
+        img.clearTint();
+      } else if (fog.explored[idx]) {
+        img.setVisible(true);
+        img.setAlpha(0.35);
+        img.setTint(memoryTint);
+      } else {
+        img.setVisible(false);
+      }
+    }
+
     // Update monster lighting (monsters only visible when lit)
     for (const [id, img] of this.monsterImages.entries()) {
       const x = Math.floor(img.x / TILE_SIZE);
@@ -890,6 +943,47 @@ export class DungeonRenderer {
   }
 
   /**
+   * Synchronizes player corpse sprites on the floor.
+   */
+  public syncCorpses(corpses: readonly PlayerCorpse[], fog: FogOfWar): void {
+    const activeIds = new Set<string>();
+    const memoryTint = hexToNumber(PALETTE.panelBorder);
+
+    for (const corpse of corpses) {
+      if (corpse.isLooted) continue;
+      activeIds.add(corpse.id);
+      let img = this.corpseImages.get(corpse.id);
+
+      if (!img) {
+        img = this.scene.add.image(corpse.x * TILE_SIZE, corpse.y * TILE_SIZE, 'tile_corpse');
+        img.setOrigin(0, 0);
+        img.setDepth(5);
+        this.corpseImages.set(corpse.id, img);
+      }
+
+      const idx = toIndex(corpse.x, corpse.y, this.floor.width);
+      if (fog.visible[idx]) {
+        img.setVisible(true);
+        img.setAlpha(1.0);
+        img.clearTint();
+      } else if (fog.explored[idx]) {
+        img.setVisible(true);
+        img.setAlpha(0.35);
+        img.setTint(memoryTint);
+      } else {
+        img.setVisible(false);
+      }
+    }
+
+    for (const [id, img] of this.corpseImages.entries()) {
+      if (!activeIds.has(id)) {
+        img.destroy();
+        this.corpseImages.delete(id);
+      }
+    }
+  }
+
+  /**
    * Synchronizes monster sprites and overhead status icons.
    */
   public syncMonsters(monsters: readonly Monster[], fog: FogOfWar): void {
@@ -1003,6 +1097,10 @@ export class DungeonRenderer {
       img.destroy();
     }
     this.chestImages.clear();
+    for (const img of this.corpseImages.values()) {
+      img.destroy();
+    }
+    this.corpseImages.clear();
     if (this.pedestalImage) {
       this.pedestalImage.destroy();
       this.pedestalImage = null;

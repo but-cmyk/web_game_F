@@ -6,6 +6,8 @@
  */
 
 import { RunMirrorMetric } from '../core/mirror';
+import { PlayerCorpse } from '../core/corpse';
+import { SurvivorRecord } from './RemoteStore';
 
 export interface GameSettings {
   readonly masterVolume: number;
@@ -15,6 +17,8 @@ export interface GameSettings {
   readonly reduceShake: boolean;
   readonly highContrast: boolean;
   readonly language: 'vi' | 'en';
+  readonly breakReminder: boolean;
+  readonly telemetryConsent: boolean;
 }
 
 export const DEFAULT_SETTINGS: GameSettings = {
@@ -25,6 +29,8 @@ export const DEFAULT_SETTINGS: GameSettings = {
   reduceShake: false,
   highContrast: false,
   language: 'vi',
+  breakReminder: true,
+  telemetryConsent: false,
 };
 
 export interface GameSave {
@@ -38,6 +44,16 @@ export interface GameSave {
   readonly recentRunMetrics?: ReadonlyArray<RunMirrorMetric>;
   readonly hasCompletedTutorial?: boolean;
   readonly settings?: GameSettings;
+  readonly corpses?: ReadonlyArray<PlayerCorpse>;
+  readonly survivors?: ReadonlyArray<SurvivorRecord>;
+  readonly anonymousId?: string;
+}
+
+export function generateAnonymousId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `anon_${Math.floor(Date.now() * 1000 + Math.random() * 1000)}`;
 }
 
 export const CURRENT_SAVE_VERSION = 1;
@@ -51,6 +67,9 @@ export const DEFAULT_SAVE: GameSave = {
   recentRunMetrics: [],
   hasCompletedTutorial: false,
   settings: DEFAULT_SETTINGS,
+  corpses: [],
+  survivors: [],
+  anonymousId: 'anon_local_player',
 };
 
 export interface SaveStore {
@@ -142,6 +161,15 @@ export class LocalStorageStore implements SaveStore {
         deaths: typeof parsed.deaths === 'number' ? parsed.deaths : 0,
         lastPlayedDate: typeof parsed.lastPlayedDate === 'string' ? parsed.lastPlayedDate : undefined,
         reduceMotion: typeof parsed.reduceMotion === 'boolean' ? parsed.reduceMotion : undefined,
+        recentRunMetrics: Array.isArray(parsed.recentRunMetrics) ? (parsed.recentRunMetrics as RunMirrorMetric[]) : undefined,
+        hasCompletedTutorial: typeof parsed.hasCompletedTutorial === 'boolean' ? parsed.hasCompletedTutorial : undefined,
+        settings:
+          parsed.settings && typeof parsed.settings === 'object'
+            ? (parsed.settings as GameSettings)
+            : undefined,
+        corpses: Array.isArray(parsed.corpses) ? (parsed.corpses as PlayerCorpse[]) : undefined,
+        survivors: Array.isArray(parsed.survivors) ? (parsed.survivors as SurvivorRecord[]) : undefined,
+        anonymousId: typeof parsed.anonymousId === 'string' ? parsed.anonymousId : undefined,
       };
     } catch {
       this.isFallback = true;

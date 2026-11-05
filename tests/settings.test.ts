@@ -14,6 +14,8 @@ describe('Game Settings Persistence (§4.11, §5 M9)', () => {
     expect(DEFAULT_SETTINGS.reduceShake).toBe(false);
     expect(DEFAULT_SETTINGS.highContrast).toBe(false);
     expect(DEFAULT_SETTINGS.language).toBe('vi');
+    expect(DEFAULT_SETTINGS.breakReminder).toBe(true);
+    expect(DEFAULT_SETTINGS.telemetryConsent).toBe(false);
   });
 
   it('persists and retrieves custom accessibility settings in MemoryStore', () => {
@@ -28,6 +30,8 @@ describe('Game Settings Persistence (§4.11, §5 M9)', () => {
       reduceShake: true,
       highContrast: true,
       language: 'en',
+      breakReminder: false,
+      telemetryConsent: true,
     };
 
     store.save({

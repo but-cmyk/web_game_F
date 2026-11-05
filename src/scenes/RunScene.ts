@@ -25,6 +25,9 @@ import { calculateLightRadius } from '../core/fear';
 import { applyCurseLightModifier } from '../core/curses';
 import { applyUpgradesToState } from '../core/upgrades';
 import { calculateGreedFearMetrics, RunMirrorMetric, RawDecisionCounts } from '../core/mirror';
+import { createCorpse, lootCorpse, filterCorpsesForFloor, PlayerCorpse } from '../core/corpse';
+import { SurvivorRecord, LocalRemoteStore } from '../services/RemoteStore';
+import { SupabaseRemoteStore } from '../services/SupabaseRemoteStore';
 import { DungeonRenderer, TILE_SIZE } from '../views/DungeonRenderer';
 import { PostFX } from '../views/PostFX';
 import { TouchControls } from '../views/TouchControls';
@@ -35,10 +38,15 @@ import { defaultSaveStore } from '../services/SaveStore';
 import { PALETTE, hexToNumber } from '../utils/palette';
 import { t } from '../i18n';
 
+// Track continuous play session time for 45-min break reminder (§4.11 Rule 6)
+const continuousSessionStart = Date.now();
+let lastBreakReminderTime = 0;
+
 export interface RunSceneData {
   readonly seed?: number;
   readonly depth?: number;
   readonly bankedGold?: number;
+  readonly isDailyRun?: boolean;
 }
 
 export class RunScene extends Phaser.Scene {
@@ -52,6 +60,8 @@ export class RunScene extends Phaser.Scene {
   private playerSprite!: Phaser.GameObjects.Image;
   private touchControls!: TouchControls;
   private visitedTiles: Set<number> = new Set();
+  private activeCorpses: PlayerCorpse[] = [];
+  private isDailyRun: boolean = false;
 
   // HUD elements
   private hpText!: Phaser.GameObjects.Text;
@@ -81,6 +91,8 @@ export class RunScene extends Phaser.Scene {
     const depth = data?.depth ?? 1;
     const save = defaultSaveStore.load();
     const bankedGold = data?.bankedGold ?? save.bankedGold;
+    this.isDailyRun = Boolean(data?.isDailyRun);
+    this.activeCorpses = filterCorpsesForFloor(save.corpses ?? [], depth);
 
     this.rng = new Rng(seed);
     this.floor = generateDungeon(this.rng, depth);
@@ -146,6 +158,13 @@ export class RunScene extends Phaser.Scene {
     this.dungeonRenderer.syncBargainPedestal(this.state.bargainPedestal, this.fog);
     this.dungeonRenderer.syncMonsters(this.state.monsters ?? [], this.fog);
     this.dungeonRenderer.syncHallucinations(this.state.hallucinations ?? [], this.fog);
+    this.dungeonRenderer.syncCorpses(this.activeCorpses, this.fog);
+
+    if (this.isDailyRun) {
+      this.time.delayedCall(300, () => {
+        this.showToast(`${t('daily.title')} — ${t('daily.seed_info', { seed })}`);
+      });
+    }
 
     // Setup presentation, HUD, controls, and audio listeners
     this.setupCamera();
@@ -301,12 +320,52 @@ export class RunScene extends Phaser.Scene {
       };
 
       const history = [...(currentSave.recentRunMetrics ?? []), runMetric].slice(-10);
+
+      // Handle corpse creation on death (§5 M10)
+      let updatedCorpses = currentSave.corpses ?? [];
+      const lost = payload.lostGold ?? this.state.carriedGold;
+      if (payload.outcome === 'died' && lost > 0) {
+        const corpse = createCorpse(
+          this.state.depth,
+          this.state.playerPos.x,
+          this.state.playerPos.y,
+          lost,
+          'monster'
+        );
+        updatedCorpses = [...updatedCorpses, corpse].slice(-10);
+      }
+
+      // Handle survivor recording on extraction (§5 M10)
+      let updatedSurvivors = currentSave.survivors ?? [];
+      if (payload.outcome === 'extracted') {
+        const anonId = currentSave.anonymousId ?? 'delver-anon';
+        const survivorRecord: SurvivorRecord = {
+          id: anonId,
+          playerName: `Delver-${anonId.slice(0, 4)}`,
+          depthReached: payload.depth,
+          runsSurvived: currentSave.runsCompleted + 1,
+          archetypeId: metrics.greedRaw >= metrics.fearRaw ? 'Gold Hunter' : 'Dark Delver',
+          timestamp: Date.now(),
+        };
+        updatedSurvivors = [...updatedSurvivors, survivorRecord].slice(-50);
+
+        if (currentSave.settings?.telemetryConsent) {
+          const localStore = new LocalRemoteStore(updatedSurvivors);
+          const remoteStore = new SupabaseRemoteStore('', '', localStore);
+          remoteStore.submitSurvivor(survivorRecord).catch((err: unknown) => {
+            console.warn('Remote survivor submit skipped:', err);
+          });
+        }
+      }
+
       const updatedSave = {
         ...currentSave,
         bankedGold: this.state.bankedGold,
         runsCompleted: currentSave.runsCompleted + (payload.outcome === 'extracted' ? 1 : 0),
         deaths: currentSave.deaths + (payload.outcome === 'died' ? 1 : 0),
         recentRunMetrics: history,
+        corpses: updatedCorpses,
+        survivors: updatedSurvivors,
       };
       defaultSaveStore.save(updatedSave);
 
@@ -687,6 +746,30 @@ export class RunScene extends Phaser.Scene {
       this.dungeonRenderer.syncBargainPedestal(this.state.bargainPedestal, this.fog);
       this.dungeonRenderer.syncMonsters(this.state.monsters ?? [], this.fog);
       this.dungeonRenderer.syncHallucinations(this.state.hallucinations ?? [], this.fog);
+      this.dungeonRenderer.syncCorpses(this.activeCorpses, this.fog);
+
+      // Check corpse recovery on current tile (§5 M10)
+      for (let i = 0; i < this.activeCorpses.length; i++) {
+        const corpse = this.activeCorpses[i];
+        if (!corpse.isLooted && corpse.x === this.state.playerPos.x && corpse.y === this.state.playerPos.y) {
+          const { goldRecovered, updatedCorpse } = lootCorpse(corpse);
+          this.activeCorpses[i] = updatedCorpse;
+          this.state.carriedGold += goldRecovered;
+          defaultAudioDirector.playGoldChime();
+          this.dungeonRenderer.spawnGoldParticles(corpse.x, corpse.y);
+          this.showToast(t('corpse.recovered', { gold: goldRecovered }));
+
+          const currentSave = defaultSaveStore.load();
+          if (currentSave.corpses) {
+            defaultSaveStore.save({
+              ...currentSave,
+              corpses: currentSave.corpses.map((c) => (c.id === corpse.id ? updatedCorpse : c)),
+            });
+          }
+          this.dungeonRenderer.syncCorpses(this.activeCorpses, this.fog);
+          break;
+        }
+      }
 
       // Check side event roll on unvisited tile (8% chance)
       if (action.type === 'MOVE') {
@@ -975,6 +1058,9 @@ export class RunScene extends Phaser.Scene {
     this.dungeonRenderer.syncBargainPedestal(this.state.bargainPedestal, this.fog);
     this.dungeonRenderer.syncMonsters(this.state.monsters ?? [], this.fog);
     this.dungeonRenderer.syncHallucinations(this.state.hallucinations ?? [], this.fog);
+    const save = defaultSaveStore.load();
+    this.activeCorpses = filterCorpsesForFloor(save.corpses ?? [], this.state.depth);
+    this.dungeonRenderer.syncCorpses(this.activeCorpses, this.fog);
     this.updateHUD();
   }
 
@@ -1010,6 +1096,99 @@ export class RunScene extends Phaser.Scene {
   override update(): void {
     const fps = Math.round(this.game.loop.actualFps);
     this.fpsText.setText(t('hud.fps', { fps }));
+    this.checkBreakReminder();
+  }
+
+  private checkBreakReminder(): void {
+    const save = defaultSaveStore.load();
+    if (save.settings?.breakReminder === false) return;
+    const now = Date.now();
+    const elapsedSinceStart = now - continuousSessionStart;
+    const elapsedSinceLastReminder = now - lastBreakReminderTime;
+    if (elapsedSinceStart >= 45 * 60 * 1000 && elapsedSinceLastReminder >= 60 * 60 * 1000) {
+      this.showBreakReminderModal();
+    }
+  }
+
+  private showBreakReminderModal(): void {
+    if (this.activeModal) return;
+    const { width, height } = this.scale;
+    const container = this.add.container(width / 2, height / 2).setScrollFactor(0).setDepth(250);
+    this.activeModal = container;
+
+    const overlay = this.add
+      .rectangle(0, 0, width, height, hexToNumber(PALETTE.background), 0.8)
+      .setOrigin(0.5);
+
+    const frame = this.add
+      .rectangle(0, 0, 240, 84, hexToNumber(PALETTE.panel), 0.95)
+      .setStrokeStyle(1, hexToNumber(PALETTE.focus))
+      .setOrigin(0.5);
+
+    const title = this.add
+      .text(0, -26, t('break.title'), {
+        fontSize: '7.5px',
+        color: PALETTE.goldHighlight,
+        fontFamily: 'monospace',
+        fontStyle: 'bold',
+      })
+      .setOrigin(0.5);
+
+    const msg = this.add
+      .text(0, -6, t('break.message'), {
+        fontSize: '5.5px',
+        color: PALETTE.text,
+        fontFamily: 'monospace',
+        wordWrap: { width: 220 },
+        align: 'center',
+      })
+      .setOrigin(0.5);
+
+    const btn = this.add
+      .rectangle(0, 22, 100, 16, hexToNumber(PALETTE.panel), 0.95)
+      .setStrokeStyle(1, hexToNumber(PALETTE.goldAccent))
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+
+    const btnText = this.add
+      .text(0, 22, t('break.continue'), {
+        fontSize: '6.5px',
+        color: PALETTE.goldHighlight,
+        fontFamily: 'monospace',
+        fontStyle: 'bold',
+      })
+      .setOrigin(0.5);
+
+    btn.on('pointerdown', () => {
+      lastBreakReminderTime = Date.now();
+      this.closeModal();
+    });
+
+    container.add([overlay, frame, title, msg, btn, btnText]);
+  }
+
+  private showToast(message: string): void {
+    const { width } = this.scale;
+    const toast = this.add
+      .text(width / 2, 28, message, {
+        fontSize: '6.5px',
+        color: PALETTE.goldHighlight,
+        fontFamily: 'monospace',
+        backgroundColor: '#161311ee',
+        padding: { x: 4, y: 2 },
+      })
+      .setScrollFactor(0)
+      .setDepth(250)
+      .setOrigin(0.5);
+
+    this.tweens.add({
+      targets: toast,
+      alpha: 0,
+      y: 20,
+      delay: 1500,
+      duration: 500,
+      onComplete: () => toast.destroy(),
+    });
   }
 
   private triggerSideEvent(evt: DungeonSideEvent): void {

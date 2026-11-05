@@ -1,5 +1,5 @@
 # DEEPER — Status
-Last updated: 2026-11-05 · Current milestone: M9
+Last updated: 2026-11-05 · Current milestone: M10
 
 | Milestone | State (todo/doing/review/done) | Branch | Notes |
 |---|---|---|---|
@@ -12,8 +12,8 @@ Last updated: 2026-11-05 · Current milestone: M9
 | M6 | done | milestone/M6 | Greed I: Loot curves, Curses, Bargains, Codex |
 | M7 | done | milestone/M7 | Greed II: Shop, Meta upgrades, Balance sim verified |
 | M8 | done | milestone/M8 | Mirror screen & Tutorial |
-| M9 | review | milestone/M9 | Biomes, polish, touch controls, settings |
-| M10 | todo | milestone/M10 | Social corpse system, data consent |
+| M9 | done | milestone/M9 | Biomes, polish, touch controls, settings |
+| M10 | review | milestone/M10 | Social corpse system, daily seeds, survivor leaderboard, ethics & privacy |
 | M11 | todo | milestone/M11 | QA, release packaging, final audit |
 
 ## Known issues
@@ -23,10 +23,13 @@ None at present.
 None at present.
 
 ## Handoff notes for the next conversation
-Milestone M9 completed & verified:
-- Core biome resolution and palette swaps for 3 depth-scaled biomes (Stone Dungeon, Fungal Cavern, Abyssal Trench).
-- Expanded side events system with 10 random events and Exploration trigger.
-- Juice & polish: Hitstop micro-pause (60ms), bounded gold particle burst (capped to 8), and screen shake/flash gated strictly behind Settings.
-- Virtual TouchControls (D-pad + mode buttons) responsive on mobile viewports (360x640).
-- SettingsScene with volume controls, accessibility toggles (reduceFlash, reduceShake, highContrast), live language toggle (vi/en), and SaveStore persistence.
-- Full verification: `npm run check` green, 25/25 test suites passing (145 tests), mechanical review 0 errors, browser smoke test verified with `smoke-m9.png`. Ready for review to close M9 and move to M10.
+Milestone M10 completed & verified:
+- **Social Corpse Retrieval System**: Death locations recorded as `PlayerCorpse`. Procedural sprite `tile_corpse` rendered in `DungeonRenderer`. Stepping onto fallen corpse recovers 50% lost gold (`recoverableGold = Math.round(lostGold * 0.5)`), plays chime/particles, and marks corpse as looted without duplication. Verified by unit tests.
+- **UTC Daily Seed Generator**: Deterministic 32-bit positive integer seed derived from UTC date `YYYY-MM-DD` via FNV-1a. Accessible via `MenuScene` button `[D] DAILY DELVE` or shortcut `D`. Zero streak penalties, zero guilt notifications (§4.11 Rule 3).
+- **Survivor Hall of Fame Leaderboard**: Ranked strictly by depth reached and runs survived — **never ranked by gold greed** (§4.10). Decoupled `RemoteStore` interface with default offline `LocalRemoteStore` and optional REST `SupabaseRemoteStore` with automatic silent offline fallback. Accessible via `LeaderboardScene` (`[L]`).
+- **45-Minute Break Reminder**: Tracks continuous exploration session time. Displays gentle, dismissible reminder modal after ~45 minutes of continuous play (max once per hour), gated by `settings.breakReminder` (§4.11 Rule 6).
+- **Data Privacy & Ethical Consent**: Opt-in anonymous telemetry toggle (`settings.telemetryConsent`), zero PII gathered, ephemeral anonymous UUID v4, explicit "Wipe All Data" button with confirmation modal in `SettingsScene`, and full privacy schema documented in `docs/TELEMETRY_SCHEMA.md` (§4.11 Rule 7).
+- **Verification Gates**:
+  - `npm run check` 100% green (typecheck, eslint, 28/28 vitest suites, 154/154 tests passing, production build successful).
+  - Mechanical review passed with 0 errors (`core-clock`, `core-math-random`, `core-imports-phaser`).
+  - Browser smoke test verified in headless Chrome via CDP generating `smoke-m10.png`.
